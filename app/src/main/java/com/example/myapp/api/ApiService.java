@@ -1,14 +1,16 @@
 package com.example.myapp.api;
 
+import com.example.myapp.models.SignUpRequest;
+import com.example.myapp.models.SignUpResponse;
+
+import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.POST;
 import retrofit2.http.Path;
 
 public interface ApiService {
-    // API lấy danh sách sản phẩm (Chiếm 15% dự án)
-//    @GET("api/products")
-//    Call<List<Product>> getAllProducts();
-//
-//    // API lấy chi tiết 1 sản phẩm (Chiếm 15% dự án)
-//    @GET("api/products/{id}")
-//    Call<Product> getProductById(@Path("id") int id);
+    @POST("api/auth/sign-up")
+    Call<SignUpResponse> signUp(@Body SignUpRequest request);
+
 }
