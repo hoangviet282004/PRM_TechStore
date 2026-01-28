@@ -1,4 +1,4 @@
-package com.example.myapp.models;
+package com.example.myapp.models.request;
 
 
 public class SignUpRequest {

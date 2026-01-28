@@ -5,8 +5,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.myapp.RetrofitClient;
 import com.example.myapp.databinding.ActivityRegisterBinding;
-import com.example.myapp.models.SignUpRequest;
-import com.example.myapp.models.SignUpResponse;
+import com.example.myapp.models.request.SignUpRequest;
+import com.example.myapp.models.response.SignUpResponse;
 
 import retrofit2.Call;
 import retrofit2.Callback;

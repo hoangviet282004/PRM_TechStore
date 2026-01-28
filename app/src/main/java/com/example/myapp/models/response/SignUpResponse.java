@@ -1,4 +1,4 @@
-package com.example.myapp.models;
+package com.example.myapp.models.response;
 
 public class SignUpResponse {
     private int statusCode;

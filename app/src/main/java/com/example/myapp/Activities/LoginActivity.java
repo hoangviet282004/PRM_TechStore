@@ -2,62 +2,85 @@ package com.example.myapp.Activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.myapp.RetrofitClient;
 import com.example.myapp.SharedPrefsManager;
-import com.example.myapp.databinding.ActivityLoginBinding; // Nhớ sửa đúng package name của bạn
+import com.example.myapp.databinding.ActivityLoginBinding;
+import com.example.myapp.models.request.LoginRequest;
+import com.example.myapp.models.response.LoginResponse;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
-    // Khai báo binding để thay thế findViewById
     private ActivityLoginBinding binding;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // ĐẶT Ở ĐÂY: Khởi tạo khi màn hình bắt đầu chạy
+        // Khởi tạo bộ nhớ bảo mật trước khi dùng
         SharedPrefsManager.init(this);
 
-        // Khởi tạo ViewBinding
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Xử lý sự kiện khi nhấn nút Đăng nhập
         binding.btnLogin.setOnClickListener(v -> {
-            String username = binding.etUsername.getText().toString().trim();
-            String password = binding.etPassword.getText().toString().trim();
+            String loginInput = binding.etUsername.getText().toString().trim();
+            String passwordInput = binding.etPassword.getText().toString().trim();
 
-            if (username.isEmpty() || password.isEmpty()) {
+            if (loginInput.isEmpty() || passwordInput.isEmpty()) {
                 Toast.makeText(this, "Vui lòng nhập tài khoản và mật khẩu", Toast.LENGTH_SHORT).show();
             } else {
-                // Gọi hàm xử lý Call API ở đây
-                performLogin(username, password);
+                performLogin(loginInput, passwordInput);
             }
         });
 
-        // Chuyển sang trang đăng ký (nếu bạn có tạo RegisterActivity)
         binding.tvRegister.setOnClickListener(v -> {
-             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
-             startActivity(intent);
+            startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
         });
     }
 
+    private void performLogin(String loginInput, String passwordInput) {
+        LoginRequest request = new LoginRequest(loginInput, passwordInput);
 
-    private void performLogin(String user, String pass) {
-        // Tạm thời hiển thị thông báo để test UI
-        if (user.equals("admin") && pass.equals("123456")) {
-            Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-            // Chuyển sang MainActivity
-            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-            startActivity(intent);
-            finish();
-        } else {
-            Toast.makeText(this, "Sai tài khoản hoặc mật khẩu (Thử admin/123456)", Toast.LENGTH_SHORT).show();
-        }
+        // Bước CALL API thực tế
+        RetrofitClient.getApiService().login(request).enqueue(new Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                // Kiểm tra mã thành công 200 từ Backend
+                if (response.isSuccessful() && response.body() != null && response.body().getStatusCode() == 200) {
 
-        // Sau này bạn sẽ dùng Retrofit để gọi API thật ở đây
+                    // Lấy Token từ object 'value'
+                    String accessToken = response.body().getValue().getAccessToken();
+                    String refreshToken = response.body().getValue().getRefreshToken();
+
+
+                    // Cất Token vào "két sắt" EncryptedSharedPreferences
+                    SharedPrefsManager.saveTokens(accessToken, refreshToken);
+
+                    Toast.makeText(LoginActivity.this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+
+                    // Vào màn hình chính
+                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                    finish();
+                } else {
+                    // Xử lý khi Backend ném ra UnauthorizedAccessException hoặc BadRequestException
+                    Toast.makeText(LoginActivity.this, "Tài khoản hoặc mật khẩu sai!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+                // Lỗi này thường do IP 10.0.2.2 hoặc Port 8080 chưa chuẩn
+                Log.e("API_ERROR", t.getMessage());
+                Toast.makeText(LoginActivity.this, "Không thể kết nối Server!", Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }
