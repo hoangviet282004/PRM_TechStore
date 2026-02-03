@@ -32,6 +32,11 @@
             android:name=".Activities.MainActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".Activities.ProductDetailActivity"
+            android:exported="false"
+            android:label="Chi tiết sản phẩm" />
+
     </application>
 
 </manifest>

@@ -55,4 +55,5 @@ dependencies {
 
     // Thư viện bảo mật của Android Jetpack
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 }
