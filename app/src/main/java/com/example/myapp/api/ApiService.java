@@ -1,10 +1,14 @@
 package com.example.myapp.api;
 
+import com.example.myapp.models.request.CreateOrderRequest;
 import com.example.myapp.models.request.LoginRequest;
+import com.example.myapp.models.request.ManageProductToCartRequest;
 import com.example.myapp.models.request.RefreshRequest;
 import com.example.myapp.models.request.SignUpRequest;
 import com.example.myapp.models.response.ApiResponse;
+import com.example.myapp.models.response.CartResponse;
 import com.example.myapp.models.response.LoginResponse;
+import com.example.myapp.models.response.OrderResponse;
 import com.example.myapp.models.response.PageResponse;
 import com.example.myapp.models.response.ProductDetailResponse;
 import com.example.myapp.models.response.ProductListResponse;
@@ -16,7 +20,9 @@ import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -47,4 +53,25 @@ public interface ApiService {
     // Thêm vào interface hiện tại của bạn
     @GET("api/products/{productId}")
     Call<ApiResponse<ProductDetailResponse>> getProductDetail(@Path("productId") Integer productId);
+
+    // ======================== Cart ==============================
+    @POST("api/cart") // Thêm sản phẩm
+    Call<ApiResponse<CartResponse>> addProduct(@Body ManageProductToCartRequest request);
+
+    @GET("api/cart") // Lấy giỏ hàng
+    Call<ApiResponse<CartResponse>> getUserCart();
+
+    @PATCH("api/cart") // Sửa số lượng
+    Call<ApiResponse<CartResponse>> adjustQuantity(@Body ManageProductToCartRequest request);
+
+    @DELETE("api/cart/{cartItemId}") // Xóa 1 món
+    Call<ApiResponse<CartResponse>> removeItem(@Path("cartItemId") int cartItemId);
+
+    // Luồng: Cart -> Order -> Payment
+    @POST("api/orders")
+    Call<ApiResponse<OrderResponse>> createOrder(@Body CreateOrderRequest request);
+
+    @GET("api/payments/{orderId}")
+    Call<ApiResponse<String>> getPaymentUrl(@Path("orderId") int orderId);
+
 }

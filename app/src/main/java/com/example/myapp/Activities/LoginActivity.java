@@ -20,16 +20,27 @@ public class LoginActivity extends AppCompatActivity {
 
     private ActivityLoginBinding binding;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Khởi tạo bộ nhớ bảo mật trước khi dùng
         SharedPrefsManager.init(this);
+
+        // Kiểm tra tự động đăng nhập
+        if (SharedPrefsManager.getAccessToken() != null) {
+            navigateToMain();
+            return;
+        }
 
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // QUAN TRỌNG: Phải gọi hàm này để kích hoạt nút bấm
+        setupListeners();
+    }
+
+    private void setupListeners() {
+        // Xử lý nút Đăng nhập
         binding.btnLogin.setOnClickListener(v -> {
             String loginInput = binding.etUsername.getText().toString().trim();
             String passwordInput = binding.etPassword.getText().toString().trim();
@@ -41,6 +52,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        // Chuyển sang trang Đăng ký
         binding.tvRegister.setOnClickListener(v -> {
             startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
         });
@@ -49,38 +61,37 @@ public class LoginActivity extends AppCompatActivity {
     private void performLogin(String loginInput, String passwordInput) {
         LoginRequest request = new LoginRequest(loginInput, passwordInput);
 
-        // Bước CALL API thực tế
         RetrofitClient.getApiService().login(request).enqueue(new Callback<LoginResponse>() {
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
-                // Kiểm tra mã thành công 200 từ Backend
+                // Kiểm tra phản hồi từ Backend (mã 200 thành công)
                 if (response.isSuccessful() && response.body() != null && response.body().getStatusCode() == 200) {
 
-                    // Lấy Token từ object 'value'
+                    // Lấy Token từ object 'value' của BE
                     String accessToken = response.body().getValue().getAccessToken();
                     String refreshToken = response.body().getValue().getRefreshToken();
 
-
-                    // Cất Token vào "két sắt" EncryptedSharedPreferences
+                    // Cất Token vào bộ nhớ máy để dùng cho lần sau
                     SharedPrefsManager.saveTokens(accessToken, refreshToken);
 
                     Toast.makeText(LoginActivity.this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-
-                    // Vào màn hình chính
-                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                    finish();
+                    navigateToMain();
                 } else {
-                    // Xử lý khi Backend ném ra UnauthorizedAccessException hoặc BadRequestException
                     Toast.makeText(LoginActivity.this, "Tài khoản hoặc mật khẩu sai!", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
-                // Lỗi này thường do IP 10.0.2.2 hoặc Port 8080 chưa chuẩn
                 Log.e("API_ERROR", t.getMessage());
                 Toast.makeText(LoginActivity.this, "Không thể kết nối Server!", Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private void navigateToMain() {
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        startActivity(intent);
+        finish(); // Đóng LoginActivity để user không quay lại được bằng nút Back
     }
 }

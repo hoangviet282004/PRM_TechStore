@@ -22,6 +22,12 @@ public class ImageSliderAdapter extends RecyclerView.Adapter<ImageSliderAdapter.
         return new ViewHolder(iv);
     }
 
+    // FIX LỖI: Thêm hàm setData để cập nhật dữ liệu từ Activity
+    public void setData(List<String> newData) {
+        this.images = newData;
+        notifyDataSetChanged(); // Yêu cầu Adapter vẽ lại các ảnh mới
+    }
+
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         String url = images.get(position);
