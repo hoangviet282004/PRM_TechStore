@@ -26,13 +26,12 @@ public class CheckoutActivity extends AppCompatActivity {
         binding = ActivityCheckoutBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Nhận Cart ID từ trang Giỏ hàng
         cartId = getIntent().getIntExtra("CART_ID", -1);
-        Log.d("CHECKOUT_DEBUG", "Bắt đầu thanh toán cho Cart ID: " + cartId);
+        Log.d("CHECKOUT_DEBUG", "Bắt đầu thanh toán PayOS cho Cart ID: " + cartId);
 
         binding.btnPay.setOnClickListener(v -> createOrder());
 
-        // Xử lý nếu App được mở từ Deep Link VNPay khi đang chạy nền
+        // Nhận kết quả từ Deep Link PayOS
         handleIntent(getIntent());
     }
 
@@ -43,18 +42,39 @@ public class CheckoutActivity extends AppCompatActivity {
         handleIntent(intent);
     }
 
+    // Thêm hàm này vào trong class CheckoutActivity
+    private void showSuccessDialog() {
+        // Tạo Dialog không viền
+        android.app.Dialog dialog = new android.app.Dialog(this);
+        dialog.setContentView(com.example.myapp.R.layout.dialog_payment_success);
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialog.setCancelable(false); // Không cho tắt khi chưa bấm nút
+
+        // Ánh xạ nút bấm trong Dialog
+        View btnHome = dialog.findViewById(com.example.myapp.R.id.btnGoHome);
+        btnHome.setOnClickListener(v -> {
+            dialog.dismiss();
+            // Quay về MainActivity và xóa sạch các Activity cũ
+            Intent intent = new Intent(CheckoutActivity.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        });
+
+        dialog.show();
+    }
+
+    // Cập nhật lại hàm handleIntent cũ của ông
     private void handleIntent(Intent intent) {
         Uri data = intent.getData();
-        if (data != null && data.getScheme().equals("techexpress")) {
-            // VNPay trả về link dạng: techexpress://vnpay_return?vnp_ResponseCode=00...
-            String responseCode = data.getQueryParameter("vnp_ResponseCode");
-            if ("00".equals(responseCode)) {
-                Toast.makeText(this, "Thanh toán thành công! Đơn hàng đang được xử lý.", Toast.LENGTH_LONG).show();
-                // Chuyển về trang chủ hoặc trang lịch sử đơn hàng
-                startActivity(new Intent(this, MainActivity.class));
-                finish();
+        if (data != null && "techexpress".equals(data.getScheme())) {
+            String status = data.getQueryParameter("status");
+            if ("PAID".equalsIgnoreCase(status)) {
+                // GỌI DIALOG ĐẸP Ở ĐÂY
+                showSuccessDialog();
             } else {
-                Toast.makeText(this, "Thanh toán thất bại hoặc đã hủy!", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Thanh toán chưa hoàn tất!", Toast.LENGTH_SHORT).show();
+                binding.btnPay.setEnabled(true);
             }
         }
     }
@@ -62,56 +82,56 @@ public class CheckoutActivity extends AppCompatActivity {
     private void createOrder() {
         String address = binding.etAddress.getText().toString().trim();
         if (address.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập địa chỉ giao hàng!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Vui lòng nhập địa chỉ!", Toast.LENGTH_SHORT).show();
             return;
         }
 
         binding.btnPay.setEnabled(false);
-        Log.d("CHECKOUT_DEBUG", "Đang tạo Order trên Server...");
+        Log.d("CHECKOUT_DEBUG", "Đang tạo Order PayOS trên Server...");
 
-        CreateOrderRequest req = new CreateOrderRequest(cartId, "VnPay", address);
+        // QUAN TRỌNG: Gửi "PayOs" thay vì "VnPay"
+        CreateOrderRequest req = new CreateOrderRequest(cartId, "PayOs", address);
         RetrofitClient.getApiService().createOrder(req).enqueue(new Callback<ApiResponse<OrderResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<OrderResponse>> call, Response<ApiResponse<OrderResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     int orderId = response.body().getData().getId();
-                    getVnPayUrl(orderId);
+                    Log.d("CHECKOUT_DEBUG", "Tạo đơn thành công, đang lấy link thanh toán...");
+                    getPayOsPaymentUrl(orderId);
                 } else {
                     binding.btnPay.setEnabled(true);
-                    Toast.makeText(CheckoutActivity.this, "Lỗi tạo đơn hàng!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(CheckoutActivity.this, "Server từ chối yêu cầu!", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<OrderResponse>> call, Throwable t) {
                 binding.btnPay.setEnabled(true);
-                Log.e("CHECKOUT_ERROR", "Tạo đơn thất bại: " + t.getMessage());
+                Log.e("CHECKOUT_ERROR", "Lỗi tạo đơn: " + t.getMessage());
+                Toast.makeText(CheckoutActivity.this, "Lỗi kết nối Server!", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void getVnPayUrl(int orderId) {
+    private void getPayOsPaymentUrl(int orderId) {
         RetrofitClient.getApiService().getPaymentUrl(orderId).enqueue(new Callback<ApiResponse<String>>() {
             @Override
             public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
                 binding.btnPay.setEnabled(true);
                 if (response.isSuccessful() && response.body() != null) {
                     String url = response.body().getData();
-                    Log.d("CHECKOUT_DEBUG", "Mở trình duyệt thanh toán: " + url);
-
-                    // Mở trình duyệt để User nhập thẻ
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    startActivity(intent);
+                    Log.d("CHECKOUT_DEBUG", "Mở trình duyệt: " + url);
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
                 } else {
-                    // ĐÂY LÀ NƠI VNPay BÁO WEBSITE CHƯA PHÊ DUYỆT
-                    Toast.makeText(CheckoutActivity.this, "VNPay từ chối kết nối. Kiểm tra cấu hình Sandbox!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(CheckoutActivity.this, "Không thể lấy link thanh toán!", Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
                 binding.btnPay.setEnabled(true);
-                Log.e("CHECKOUT_ERROR", "Lỗi lấy link VNPay: " + t.getMessage());
+                Log.e("CHECKOUT_ERROR", "Lỗi lấy link: " + t.getMessage());
+                Toast.makeText(CheckoutActivity.this, "Quá thời gian phản hồi (Timeout)!", Toast.LENGTH_LONG).show();
             }
         });
     }

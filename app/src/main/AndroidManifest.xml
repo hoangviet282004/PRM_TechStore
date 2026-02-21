@@ -35,7 +35,7 @@
             android:launchMode="singleTop"
             android:label="Thanh toán">
 
-            <intent-filter android:label="VNPay Return">
+            <intent-filter android:label="Payment Return">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />

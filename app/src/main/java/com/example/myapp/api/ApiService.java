@@ -31,7 +31,6 @@ public interface ApiService {
     @POST("api/auth/sign-up")
     Call<SignUpResponse> signUp(@Body SignUpRequest request);
 
-    // Theo image_f82f1e.png, đường dẫn là api/auth/sign-in
     @POST("api/auth/sign-in")
     Call<LoginResponse> login(@Body LoginRequest request);
 
@@ -44,34 +43,30 @@ public interface ApiService {
             @Query("categoryId") Integer categoryId,
             @Query("minPrice") BigDecimal minPrice,
             @Query("maxPrice") BigDecimal maxPrice,
-            @Query("keyword") String keyword,      // Khớp với tham số keyword của BE
-            @Query("sortByPrice") String sortByPrice, // Khớp với defaultValue = "asc"
+            @Query("keyword") String keyword,
+            @Query("sortByPrice") String sortByPrice,
             @Query("page") int page,
             @Query("size") int size
     );
 
-    // Thêm vào interface hiện tại của bạn
     @GET("api/products/{productId}")
     Call<ApiResponse<ProductDetailResponse>> getProductDetail(@Path("productId") Integer productId);
 
-    // ======================== Cart ==============================
-    @POST("api/cart") // Thêm sản phẩm
+    @POST("api/cart")
     Call<ApiResponse<CartResponse>> addProduct(@Body ManageProductToCartRequest request);
 
-    @GET("api/cart") // Lấy giỏ hàng
+    @GET("api/cart")
     Call<ApiResponse<CartResponse>> getUserCart();
 
-    @PATCH("api/cart") // Sửa số lượng
+    @PATCH("api/cart")
     Call<ApiResponse<CartResponse>> adjustQuantity(@Body ManageProductToCartRequest request);
 
-    @DELETE("api/cart/{cartItemId}") // Xóa 1 món
+    @DELETE("api/cart/{cartItemId}")
     Call<ApiResponse<CartResponse>> removeItem(@Path("cartItemId") int cartItemId);
 
-    // Luồng: Cart -> Order -> Payment
     @POST("api/orders")
     Call<ApiResponse<OrderResponse>> createOrder(@Body CreateOrderRequest request);
 
     @GET("api/payments/{orderId}")
     Call<ApiResponse<String>> getPaymentUrl(@Path("orderId") int orderId);
-
 }
