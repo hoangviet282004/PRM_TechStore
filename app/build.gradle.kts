@@ -57,4 +57,8 @@ dependencies {
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation("com.airbnb.android:lottie:6.0.0")
+
+    // Thư viện xử lý thông báo và chạy ngầm
+    implementation("androidx.core:core:1.12.0")
+    implementation("androidx.work:work-runtime:2.9.0")
 }
