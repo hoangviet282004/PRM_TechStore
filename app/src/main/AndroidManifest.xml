@@ -29,6 +29,21 @@
         <activity android:name=".Activities.ProductDetailActivity" android:exported="false" android:label="Chi tiết sản phẩm" />
         <activity android:name=".Activities.CartActivity" android:exported="false" android:label="Giỏ hàng của tôi" />
 
+
+        <activity
+            android:name=".Activities.PaymentResultActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="techexpress"
+                    android:host="payment_result" />
+            </intent-filter>
+        </activity>
+
+
         <activity
             android:name=".Activities.CheckoutActivity"
             android:exported="true"
