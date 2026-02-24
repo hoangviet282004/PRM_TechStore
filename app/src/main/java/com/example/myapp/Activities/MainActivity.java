@@ -1,6 +1,9 @@
 package com.example.myapp.Activities;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -9,17 +12,25 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import com.example.myapp.R;
 import com.example.myapp.RetrofitClient;
 import com.example.myapp.SharedPrefsManager;
+import com.example.myapp.Utils.NotificationHelper;
+import com.example.myapp.Workers.CartBadgeWorker;
 import com.example.myapp.adapters.ProductAdapter;
 import com.example.myapp.databinding.ActivityMainBinding;
 import com.example.myapp.models.response.ApiResponse;
 import com.example.myapp.models.response.PageResponse;
 import com.example.myapp.models.response.ProductListResponse;
-import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -29,6 +40,9 @@ public class MainActivity extends AppCompatActivity {
     private ProductAdapter adapter;
     private String currentSort = "asc";
     private String currentKeyword = null;
+
+    // Mã code định danh cho việc xin quyền
+    private static final int NOTI_PERMISSION_CODE = 1001;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,9 +54,28 @@ public class MainActivity extends AppCompatActivity {
         // Kích hoạt Toolbar để hiện Menu
         setSupportActionBar(binding.toolbar);
 
+        // 1. Xin quyền thông báo (Bắt buộc cho Android 13+)
+        checkNotificationPermission();
+
+        // 2. Xóa Badge/Thông báo cũ khi người dùng mở App để làm sạch icon
+//        NotificationHelper.clearNotification(this);
+
         setupRecyclerView();
         setupSearchAndSort();
         loadProductsFromBE();
+
+        // 3. TEST NGAY: Ép Worker chạy 1 lần để hiện Badge ngay khi mở App (Dành cho việc demo)
+        WorkManager.getInstance(this).enqueue(new OneTimeWorkRequest.Builder(CartBadgeWorker.class).build());
+    }
+
+    private void checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTI_PERMISSION_CODE);
+            }
+        }
     }
 
     @Override
@@ -90,6 +123,15 @@ public class MainActivity extends AppCompatActivity {
             binding.btnSortPrice.setText("Giá " + (currentSort.equals("asc") ? "↑" : "↓"));
             loadProductsFromBE();
         });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // 4. Đặt lịch chạy ngầm định kỳ 15 phút một lần khi App đóng
+        PeriodicWorkRequest cartWork = new PeriodicWorkRequest.Builder(
+                CartBadgeWorker.class, 15, TimeUnit.MINUTES).build();
+        WorkManager.getInstance(this).enqueue(cartWork);
     }
 
     private void loadProductsFromBE() {

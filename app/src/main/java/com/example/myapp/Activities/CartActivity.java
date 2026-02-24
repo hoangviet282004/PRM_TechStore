@@ -29,6 +29,10 @@ public class CartActivity extends AppCompatActivity {
         binding = ActivityCartBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+
+        // THÊM DÒNG NÀY VÀO ĐÂY: Để xóa thông báo và dot khi khách vào xem giỏ hàng
+//        com.example.myapp.Utils.NotificationHelper.clearNotification(this);
+
         setupRecyclerView();
 
         // Xử lý nút THANH TOÁN (10% điểm Billing)
