@@ -23,7 +23,7 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnPay"
         android:layout_marginTop="30dp"
-        android:text="THANH TOÁN VNPAY"
+        android:text="THANH TOÁN PAYOS"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         app:cornerRadius="12dp"/>
