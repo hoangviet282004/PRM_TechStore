@@ -1,23 +1,15 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
+    android:gravity="start"
     android:padding="8dp">
-
     <TextView
-        android:id="@+id/txtMessageReceived"
+        android:id="@+id/tvMessageReceived"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="60dp"
-        android:background="@drawable/bg_received_message"
-        android:padding="12dp"
-        android:text="Chào bạn, mình có thể giúp gì?"
-        android:textColor="#000000" />
-
-    <TextView
-        android:id="@+id/txtTimeReceived"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="10sp"
-        android:text="10:30" />
+        android:background="@drawable/bg_quantity"
+        android:backgroundTint="#FFFFFF"
+        android:padding="10dp"
+        android:textColor="#000000"
+        android:textSize="16sp" />
 </LinearLayout>

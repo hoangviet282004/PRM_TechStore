@@ -15,6 +15,8 @@ public class SharedPrefsManager {
     private static final String KEY_REFRESH = "refresh_token";
     private static final String KEY_ROLE = "user_role"; // FIX: Thêm key để lưu Role
 
+    private static final String KEY_USERNAME = "username";
+
     public static void init(Context context) {
         if (sharedPreferences == null) {
             try {
@@ -51,6 +53,15 @@ public class SharedPrefsManager {
     // THÊM: Hàm lấy Role để phân luồng Chat
     public static String getUserRole() {
         return sharedPreferences.getString(KEY_ROLE, "Customer"); // Mặc định là Customer
+    }
+
+
+    public static void saveUsername(String username) {
+        sharedPreferences.edit().putString(KEY_USERNAME, username).apply();
+    }
+
+    public static String getUsername() {
+        return sharedPreferences.getString(KEY_USERNAME, "");
     }
 
     public static void clearAll() {

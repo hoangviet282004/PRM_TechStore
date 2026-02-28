@@ -56,6 +56,7 @@ public class LoginActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null && response.body().getStatusCode() == 200) {
                     String access = response.body().getValue().getAccessToken();
                     String refresh = response.body().getValue().getRefreshToken();
+                    String username = getUsernameFromJWT(access); // Thêm hàm này
 
                     // BƯỚC QUAN TRỌNG: Giải mã Role từ chuỗi Token
                     String role = getRoleFromJWT(access);
@@ -76,6 +77,17 @@ public class LoginActivity extends AppCompatActivity {
                 Log.e("API_ERROR", t.getMessage());
             }
         });
+    }
+
+
+    // Thêm hàm bóc tách Username
+    private String getUsernameFromJWT(String token) {
+        try {
+            String[] parts = token.split("\\.");
+            byte[] decodedBytes = android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE);
+            org.json.JSONObject jsonObject = new org.json.JSONObject(new String(decodedBytes, "UTF-8"));
+            return jsonObject.optString("username", "");
+        } catch (Exception e) { return ""; }
     }
 
     // Hàm bóc tách Role từ JWT Payload
