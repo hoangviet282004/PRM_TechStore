@@ -49,8 +49,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         SharedPrefsManager.init(this);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-
+        setContentView((android.view.View) binding.getRoot());
         // Kích hoạt Toolbar để hiện Menu
         setSupportActionBar(binding.toolbar);
 
@@ -67,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
         // 3. TEST NGAY: Ép Worker chạy 1 lần để hiện Badge ngay khi mở App (Dành cho việc demo)
         WorkManager.getInstance(this).enqueue(new OneTimeWorkRequest.Builder(CartBadgeWorker.class).build());
     }
+
 
     private void checkNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -86,10 +86,18 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_logout) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_map) {
+            // Mở màn hình bản đồ
+            Intent intent = new Intent(MainActivity.this, MapActivity.class);
+            startActivity(intent);
+            return true;
+        } else if (id == R.id.action_logout) {
             performLogout();
             return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 

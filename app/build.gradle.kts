@@ -61,4 +61,7 @@ dependencies {
     // Thư viện xử lý thông báo và chạy ngầm
     implementation("androidx.core:core:1.12.0")
     implementation("androidx.work:work-runtime:2.9.0")
+
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-location:21.1.0")
 }
