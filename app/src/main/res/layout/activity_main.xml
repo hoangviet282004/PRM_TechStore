@@ -48,16 +48,34 @@
         app:layout_constraintTop_toBottomOf="@id/layoutSearch"
         app:layout_constraintBottom_toBottomOf="parent" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabChat"
+    <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:src="@android:drawable/stat_notify_chat"
-        android:contentDescription="Mở hỗ trợ trực tuyến"
-        app:backgroundTint="#2196F3"
-        app:tint="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabChat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/stat_notify_chat"
+            android:contentDescription="Hỗ trợ"
+            app:elevation="6dp" />
+
+        <TextView
+            android:id="@+id/tvChatBadge"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="-4dp"
+            android:layout_marginEnd="-4dp"
+            android:background="@drawable/bg_unread_badge"
+            android:elevation="12dp"
+            android:gravity="center"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:visibility="gone" /> </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

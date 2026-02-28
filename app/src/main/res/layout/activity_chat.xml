@@ -16,14 +16,27 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:title="Hỗ trợ TechExpress" />
 
+    <TextView
+        android:id="@+id/tvRoleNote"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="#EEEEEE"
+        android:padding="8dp"
+        android:textAlignment="center"
+        android:textColor="#616161"
+        android:textSize="13sp"
+        android:textStyle="bold|italic"
+        app:layout_constraintTop_toBottomOf="@id/toolbarChat"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvChat"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:padding="8dp"
         android:clipToPadding="false"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintTop_toBottomOf="@+id/toolbarChat"
+        app:layout_constraintTop_toBottomOf="@+id/tvRoleNote"
         app:layout_constraintBottom_toTopOf="@+id/layoutInput"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -47,9 +60,9 @@
             android:background="@android:color/transparent"
             android:hint="Nhập tin nhắn..."
             android:padding="12dp"
-            android:importantForAutofill="no"
             android:inputType="textShortMessage"
-            android:maxLines="4" />
+            android:maxLines="4"
+            android:importantForAutofill="no" />
 
         <ImageButton
             android:id="@+id/btnSend"

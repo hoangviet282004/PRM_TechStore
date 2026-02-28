@@ -5,11 +5,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.inputmethod.EditorInfo;
-import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -26,8 +27,11 @@ import com.example.myapp.Workers.CartBadgeWorker;
 import com.example.myapp.adapters.ProductAdapter;
 import com.example.myapp.databinding.ActivityMainBinding;
 import com.example.myapp.models.response.ApiResponse;
+import com.example.myapp.models.response.ChatRoomResponse;
 import com.example.myapp.models.response.PageResponse;
 import com.example.myapp.models.response.ProductListResponse;
+
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -38,6 +42,28 @@ public class MainActivity extends AppCompatActivity {
     private ProductAdapter adapter;
     private String currentSort = "asc";
     private String currentKeyword = null;
+    private Handler badgeHandler = new Handler();
+
+    private Runnable badgeRunnable = new Runnable() {
+
+        @Override
+        public void run() {
+            updateChatBadge();
+            badgeHandler.postDelayed(this, 10000); // 10 giây cập nhật 1 lần
+        }
+    };
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        badgeHandler.post(badgeRunnable);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        badgeHandler.removeCallbacks(badgeRunnable);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,10 +82,11 @@ public class MainActivity extends AppCompatActivity {
         loadProductsFromBE();
         setupUniqueCartWorker();
 
-        // 2. Logic Chat thông minh (Đã xóa đoạn thừa ở hàm search)
+        // Khi nhấn nút Chat để vào hỗ trợ
         binding.fabChat.setOnClickListener(v -> {
+            binding.tvChatBadge.setVisibility(android.view.View.GONE); // Xóa dấu ! khi đã vào xem
+
             String role = SharedPrefsManager.getUserRole();
-            Log.d("CHAT_FLOW", "Mở Chat với quyền: " + role);
             if ("Admin".equalsIgnoreCase(role)) {
                 startActivity(new Intent(this, AdminChatListActivity.class));
             } else {
@@ -67,6 +94,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+// Hàm để gọi từ WebSocket khi có tin nhắn mới nổ về
+        public void triggerNewMessageBadge() {
+            runOnUiThread(() -> binding.tvChatBadge.setVisibility(android.view.View.VISIBLE));
+        }
+
 
     private void setupUniqueCartWorker() {
         PeriodicWorkRequest cartWork = new PeriodicWorkRequest.Builder(
@@ -128,5 +161,63 @@ public class MainActivity extends AppCompatActivity {
                     }
                     @Override public void onFailure(Call<ApiResponse<PageResponse<ProductListResponse>>> call, Throwable t) { Log.e("API_ERROR", t.getMessage()); }
                 });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Mỗi khi quay lại màn hình chính, cập nhật lại số tin nhắn chưa đọc
+        updateChatBadge();
+    }
+
+    public void updateChatBadge() {
+        String token = SharedPrefsManager.getAccessToken();
+        if (token == null) return;
+        String bearerToken = "Bearer " + token;
+        String role = SharedPrefsManager.getUserRole();
+
+        if ("Admin".equalsIgnoreCase(role)) {
+            // ADMIN: Lấy danh sách phòng và cộng dồn unreadCount
+            RetrofitClient.getApiService().getAdminRooms(bearerToken, 0, 100).enqueue(new Callback<ApiResponse<PageResponse<ChatRoomResponse>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<PageResponse<ChatRoomResponse>>> call, Response<ApiResponse<PageResponse<ChatRoomResponse>>> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        long totalUnread = 0;
+                        List<ChatRoomResponse> rooms = response.body().getData().getContent();
+                        for (ChatRoomResponse room : rooms) {
+                            totalUnread += room.getUnreadCount();
+                        }
+                        showNumberOnBadge(totalUnread);
+                    }
+                }
+                @Override
+                public void onFailure(Call<ApiResponse<PageResponse<ChatRoomResponse>>> call, Throwable t) {}
+            });
+        } else {
+            // CUSTOMER: Lấy unreadCount từ phòng duy nhất của mình
+            RetrofitClient.getApiService().getMyRoom(bearerToken).enqueue(new Callback<ApiResponse<ChatRoomResponse>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<ChatRoomResponse>> call, Response<ApiResponse<ChatRoomResponse>> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        long unread = response.body().getData().getUnreadCount();
+                        showNumberOnBadge(unread);
+                    }
+                }
+                @Override
+                public void onFailure(Call<ApiResponse<ChatRoomResponse>> call, Throwable t) {}
+            });
+        }
+    }
+
+    private void showNumberOnBadge(long count) {
+        runOnUiThread(() -> {
+            if (count > 0) {
+                binding.tvChatBadge.setVisibility(View.VISIBLE);
+                // Nếu nhiều quá thì hiện 9+, không thì hiện số
+                binding.tvChatBadge.setText(count > 9 ? "9+" : String.valueOf(count));
+            } else {
+                binding.tvChatBadge.setVisibility(View.GONE);
+            }
+        });
     }
 }

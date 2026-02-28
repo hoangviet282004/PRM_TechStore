@@ -24,10 +24,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public int getItemViewType(int position) {
-        if (mMessages.get(position).getSenderUsername().equals(currentUsername)) {
-            return TYPE_SENT;
+        ChatMessageResponse msg = mMessages.get(position);
+
+        // Quy tắc cố định: Admin bên PHẢI, Khách bên TRÁI
+        if ("admin".equalsIgnoreCase(msg.getSenderUsername())) {
+            return TYPE_SENT; // Layout bên PHẢI (Admin)
         } else {
-            return TYPE_RECEIVED;
+            return TYPE_RECEIVED; // Layout bên TRÁI (Khách hàng)
         }
     }
 
