@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,7 +21,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import retrofit2.Call;
@@ -45,34 +43,26 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        // Đảm bảo lấy token trước khi gọi bất kỳ API nào
         String token = SharedPrefsManager.getAccessToken();
         if (token != null) {
             jwtToken = "Bearer " + token;
         } else {
-            Toast.makeText(this, "Vui lòng đăng nhập lại!", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
         setupRecyclerView();
-//
-//        String token = SharedPrefsManager.getAccessToken();
-//        if (token != null) jwtToken = "Bearer " + token;
-
         initWebSocket();
 
-        // FIX: Đưa logic phân quyền ra ngoài onCreate
         if (getIntent().hasExtra("ROOM_ID")) {
-            // ADMIN hỗ trợ khách
             this.roomId = getIntent().getIntExtra("ROOM_ID", -1);
             String clientName = getIntent().getStringExtra("CLIENT_NAME");
             if (getSupportActionBar() != null) getSupportActionBar().setTitle("Hỗ trợ: " + clientName);
+
             subscribeToWebSocket(roomId);
-            loadChatHistory(roomId); // THÊM DÒNG NÀY ĐỂ HIỆN TIN NHẮN CŨ
+            loadChatHistory(roomId);
             markAsRead(roomId);
         } else {
-            // CUSTOMER tự chat
             fetchRoomAndSubscribe();
         }
 
@@ -99,9 +89,34 @@ public class ChatActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     roomId = response.body().getData().getRoomId();
                     subscribeToWebSocket(roomId);
+                    loadChatHistory(roomId); // Load lịch sử cho khách
                 }
             }
-            @Override public void onFailure(Call<ApiResponse<ChatRoomResponse>> call, Throwable t) { Log.e("CHAT", "Lỗi: " + t.getMessage()); }
+            @Override public void onFailure(Call<ApiResponse<ChatRoomResponse>> call, Throwable t) { Log.e("CHAT", "Lỗi lấy phòng"); }
+        });
+    }
+
+    private void loadChatHistory(int roomId) {
+        RetrofitClient.getApiService().getMessages(jwtToken, roomId, 0, 50).enqueue(new Callback<ApiResponse<PageResponse<ChatMessageResponse>>>() {
+            @Override public void onResponse(Call<ApiResponse<PageResponse<ChatMessageResponse>>> call, Response<ApiResponse<PageResponse<ChatMessageResponse>>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    mMessages.clear();
+                    mMessages.addAll(response.body().getData().getContent());
+                    chatAdapter.notifyDataSetChanged();
+                    if (!mMessages.isEmpty()) ((RecyclerView)findViewById(R.id.rvChat)).scrollToPosition(mMessages.size() - 1);
+                }
+            }
+            @Override public void onFailure(Call<ApiResponse<PageResponse<ChatMessageResponse>>> call, Throwable t) {}
+        });
+    }
+
+    private void markAsRead(int roomId) {
+        // FIX: Kiểu dữ liệu Map<String, Integer> đồng nhất với ApiService
+        RetrofitClient.getApiService().markAsRead(jwtToken, roomId).enqueue(new Callback<ApiResponse<Map<String, Integer>>>() {
+            @Override public void onResponse(Call<ApiResponse<Map<String, Integer>>> call, Response<ApiResponse<Map<String, Integer>>> response) {
+                if (response.isSuccessful()) Log.d("CHAT", "Đã đọc");
+            }
+            @Override public void onFailure(Call<ApiResponse<Map<String, Integer>>> call, Throwable t) {}
         });
     }
 
@@ -122,48 +137,6 @@ public class ChatActivity extends AppCompatActivity {
         JSONObject json = new JSONObject();
         try { json.put("roomId", roomId); json.put("message", text); } catch (JSONException e) {}
         mStompClient.send("/app/chat.send", json.toString()).subscribe();
-    }
-
-    private void markAsRead(int roomId) {
-        // Thay ApiResponse<Object> bằng ApiResponse<Map<String, Integer>> cho khớp với ApiService
-        RetrofitClient.getApiService().markAsRead(jwtToken, roomId).enqueue(new Callback<ApiResponse<Map<String, Integer>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<Map<String, Integer>>> call, Response<ApiResponse<Map<String, Integer>>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    // Backend trả về: {"markedCount": 5}
-                    Log.d("CHAT", "Đã đánh dấu đọc tin nhắn");
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<Map<String, Integer>>> call, Throwable t) {
-                Log.e("CHAT", "Lỗi markAsRead: " + t.getMessage());
-            }
-        });
-    }
-
-    // Thêm hàm này để nạp lịch sử tin nhắn từ Backend
-    private void loadChatHistory(int roomId) {
-        RetrofitClient.getApiService().getMessages(jwtToken, roomId, 0, 50)
-                .enqueue(new Callback<ApiResponse<PageResponse<ChatMessageResponse>>>() {
-                    @Override
-                    public void onResponse(Call<ApiResponse<PageResponse<ChatMessageResponse>>> call,
-                                           Response<ApiResponse<PageResponse<ChatMessageResponse>>> response) {
-                        if (response.isSuccessful() && response.body() != null) {
-                            List<ChatMessageResponse> history = response.body().getData().getContent();
-                            mMessages.clear();
-                            mMessages.addAll(history); // Đổ dữ liệu cũ vào danh sách
-                            chatAdapter.notifyDataSetChanged();
-                            if (mMessages.size() > 0) {
-                                ((RecyclerView)findViewById(R.id.rvChat)).scrollToPosition(mMessages.size() - 1);
-                            }
-                        }
-                    }
-                    @Override
-                    public void onFailure(Call<ApiResponse<PageResponse<ChatMessageResponse>>> call, Throwable t) {
-                        Log.e("CHAT", "Lỗi tải lịch sử: " + t.getMessage());
-                    }
-                });
     }
 
     private void setupRecyclerView() {

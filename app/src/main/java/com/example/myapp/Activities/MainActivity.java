@@ -47,20 +47,23 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
 
+        // 1. Dọn dẹp Worker spam (Chạy 1 lần rồi có thể xóa dòng này)
+        WorkManager.getInstance(this).cancelAllWork();
+
         checkNotificationPermission();
         setupRecyclerView();
         setupSearchAndSort();
         loadProductsFromBE();
-        setupUniqueCartWorker(); // FIX SPAM
+        setupUniqueCartWorker();
 
-        // Xử lý nút Chat thông minh
+        // 2. Logic Chat thông minh (Đã xóa đoạn thừa ở hàm search)
         binding.fabChat.setOnClickListener(v -> {
             String role = SharedPrefsManager.getUserRole();
-            Log.d("CHAT_FLOW", "Role hiện tại: " + role);
+            Log.d("CHAT_FLOW", "Mở Chat với quyền: " + role);
             if ("Admin".equalsIgnoreCase(role)) {
-                startActivity(new Intent(MainActivity.this, AdminChatListActivity.class));
+                startActivity(new Intent(this, AdminChatListActivity.class));
             } else {
-                startActivity(new Intent(MainActivity.this, ChatActivity.class));
+                startActivity(new Intent(this, ChatActivity.class));
             }
         });
     }
