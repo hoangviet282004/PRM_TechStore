@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
@@ -22,7 +23,6 @@ import androidx.work.WorkManager;
 import com.example.myapp.R;
 import com.example.myapp.RetrofitClient;
 import com.example.myapp.SharedPrefsManager;
-import com.example.myapp.Utils.NotificationHelper;
 import com.example.myapp.Workers.CartBadgeWorker;
 import com.example.myapp.adapters.ProductAdapter;
 import com.example.myapp.databinding.ActivityMainBinding;
@@ -40,8 +40,6 @@ public class MainActivity extends AppCompatActivity {
     private ProductAdapter adapter;
     private String currentSort = "asc";
     private String currentKeyword = null;
-
-    // Mã code định danh cho việc xin quyền
     private static final int NOTI_PERMISSION_CODE = 1001;
 
     @Override
@@ -49,24 +47,46 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         SharedPrefsManager.init(this);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView((android.view.View) binding.getRoot());
-        // Kích hoạt Toolbar để hiện Menu
+        setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
 
-        // 1. Xin quyền thông báo (Bắt buộc cho Android 13+)
         checkNotificationPermission();
-
-        // 2. Xóa Badge/Thông báo cũ khi người dùng mở App để làm sạch icon
-//        NotificationHelper.clearNotification(this);
-
         setupRecyclerView();
         setupSearchAndSort();
         loadProductsFromBE();
 
-        // 3. TEST NGAY: Ép Worker chạy 1 lần để hiện Badge ngay khi mở App (Dành cho việc demo)
-        WorkManager.getInstance(this).enqueue(new OneTimeWorkRequest.Builder(CartBadgeWorker.class).build());
+        // 1. FIX LỖI SPAM: Thiết lập Worker chạy định kỳ một cách duy nhất
+        setupUniqueCartWorker();
+
+        // 2. Click nút Chat thông minh theo Role
+        binding.fabChat.setOnClickListener(v -> {
+            String role = SharedPrefsManager.getUserRole();
+            if ("Admin".equalsIgnoreCase(role)) {
+                // Admin -> Xem danh sách tất cả khách hàng
+                startActivity(new Intent(MainActivity.this, AdminChatListActivity.class));
+            } else {
+                // Customer -> Vào thẳng phòng chat của mình
+                startActivity(new Intent(MainActivity.this, ChatActivity.class));
+            }
+        });
     }
 
+    // Hàm thiết lập Worker duy nhất để tránh tạo hàng chục tiến trình ngầm
+    private void setupUniqueCartWorker() {
+        PeriodicWorkRequest cartWork = new PeriodicWorkRequest.Builder(
+                CartBadgeWorker.class, 15, TimeUnit.MINUTES)
+                .build();
+
+        // Sử dụng enqueueUniquePeriodicWork với policy KEEP để chỉ giữ lại 1 bản thực thi duy nhất
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                "UniqueCartBadgeCheck",
+                ExistingPeriodicWorkPolicy.KEEP,
+                cartWork
+        );
+
+        // Chạy thử ngay 1 lần lúc mở App để cập nhật Badge
+        WorkManager.getInstance(this).enqueue(new OneTimeWorkRequest.Builder(CartBadgeWorker.class).build());
+    }
 
     private void checkNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -87,24 +107,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-
         if (id == R.id.action_map) {
-            // Mở màn hình bản đồ
-            Intent intent = new Intent(MainActivity.this, MapActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(MainActivity.this, MapActivity.class));
             return true;
         } else if (id == R.id.action_logout) {
             performLogout();
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
     private void performLogout() {
         SharedPrefsManager.clearAll();
         Intent intent = new Intent(this, LoginActivity.class);
-        // Xóa sạch lịch sử để không nhấn Back quay lại được
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
@@ -136,10 +151,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        // 4. Đặt lịch chạy ngầm định kỳ 15 phút một lần khi App đóng
-        PeriodicWorkRequest cartWork = new PeriodicWorkRequest.Builder(
-                CartBadgeWorker.class, 15, TimeUnit.MINUTES).build();
-        WorkManager.getInstance(this).enqueue(cartWork);
+        // ĐÃ XÓA logic enqueue cũ ở đây để tránh lỗi Spam Worker
     }
 
     private void loadProductsFromBE() {

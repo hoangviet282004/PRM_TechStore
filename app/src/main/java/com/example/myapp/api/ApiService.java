@@ -7,6 +7,8 @@ import com.example.myapp.models.request.RefreshRequest;
 import com.example.myapp.models.request.SignUpRequest;
 import com.example.myapp.models.response.ApiResponse;
 import com.example.myapp.models.response.CartResponse;
+import com.example.myapp.models.response.ChatMessageResponse;
+import com.example.myapp.models.response.ChatRoomResponse;
 import com.example.myapp.models.response.LoginResponse;
 import com.example.myapp.models.response.OrderResponse;
 import com.example.myapp.models.response.PageResponse;
@@ -22,6 +24,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
@@ -69,4 +72,30 @@ public interface ApiService {
 
     @GET("api/payments/{orderId}")
     Call<ApiResponse<String>> getPaymentUrl(@Path("orderId") int orderId);
+
+
+    // Lấy thông tin phòng chat của khách hàng hiện tại
+    @GET("/api/chat/room")
+    Call<ApiResponse<ChatRoomResponse>> getMyRoom(@Header("Authorization") String token);
+
+    // Lấy lịch sử tin nhắn trong phòng
+    @GET("/api/chat/rooms/{roomId}/messages")
+    Call<ApiResponse<PageResponse<ChatMessageResponse>>> getMessages(
+            @Header("Authorization") String token,
+            @Path("roomId") Integer roomId
+    );
+
+    @GET("api/chat/rooms")
+    Call<ApiResponse<PageResponse<ChatRoomResponse>>> getAdminRooms(
+            @Header("Authorization") String token,
+            @Query("page") int page,
+            @Query("size") int size
+    );
+
+
+    @POST("api/chat/rooms/{roomId}/read")
+    Call<ApiResponse<Object>> markAsRead(
+            @Header("Authorization") String token,
+            @Path("roomId") int roomId
+    );
 }

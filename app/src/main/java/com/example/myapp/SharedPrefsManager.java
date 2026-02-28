@@ -11,9 +11,9 @@ public class SharedPrefsManager {
     private static final String PREF_NAME = "SecureData";
     private static SharedPreferences sharedPreferences;
 
-    // Các hằng số để tránh gõ sai tên
     private static final String KEY_ACCESS = "access_token";
     private static final String KEY_REFRESH = "refresh_token";
+    private static final String KEY_ROLE = "user_role"; // FIX: Thêm key để lưu Role
 
     public static void init(Context context) {
         if (sharedPreferences == null) {
@@ -35,6 +35,11 @@ public class SharedPrefsManager {
                 .apply();
     }
 
+    // THÊM: Hàm lưu Role khi Login thành công
+    public static void saveUserRole(String role) {
+        sharedPreferences.edit().putString(KEY_ROLE, role).apply();
+    }
+
     public static String getAccessToken() {
         return sharedPreferences.getString(KEY_ACCESS, null);
     }
@@ -43,7 +48,11 @@ public class SharedPrefsManager {
         return sharedPreferences.getString(KEY_REFRESH, null);
     }
 
-    // Hàm dứt điểm: Xóa sạch toàn bộ để đăng xuất thật sự
+    // THÊM: Hàm lấy Role để phân luồng Chat
+    public static String getUserRole() {
+        return sharedPreferences.getString(KEY_ROLE, "Customer"); // Mặc định là Customer
+    }
+
     public static void clearAll() {
         if (sharedPreferences != null) {
             sharedPreferences.edit().clear().apply();

@@ -11,7 +11,18 @@ public class LoginResponse {
         private String accessToken;
         private String refreshToken;
 
+        private String role; // THÊM DÒNG NÀY ĐỂ NHẬN ROLE TỪ BACKEND
+
         public String getAccessToken() { return accessToken; }
         public String getRefreshToken() { return refreshToken; }
+
+        // THÊM GETTER ĐỂ LOGINACTIVITY CÓ THỂ LẤY ĐƯỢC ROLE
+        public String getRole() {
+            return role;
+        }
+
+        public void setRole(String role) {
+            this.role = role;
+        }
     }
 }

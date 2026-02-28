@@ -67,12 +67,14 @@ public class LoginActivity extends AppCompatActivity {
                 // Kiểm tra phản hồi từ Backend (mã 200 thành công)
                 if (response.isSuccessful() && response.body() != null && response.body().getStatusCode() == 200) {
 
-                    // Lấy Token từ object 'value' của BE
+                    // 1. Lấy dữ liệu từ BE
                     String accessToken = response.body().getValue().getAccessToken();
                     String refreshToken = response.body().getValue().getRefreshToken();
+                    String role = response.body().getValue().getRole(); // Đảm bảo LoginResponse của ông có trường này
 
-                    // Cất Token vào bộ nhớ máy để dùng cho lần sau
+                    // 2. Lưu vào SharedPrefsManager
                     SharedPrefsManager.saveTokens(accessToken, refreshToken);
+                    SharedPrefsManager.saveUserRole(role); // FIX: Lưu Role ở đây
 
                     Toast.makeText(LoginActivity.this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
                     navigateToMain();

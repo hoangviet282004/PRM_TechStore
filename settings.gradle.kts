@@ -16,6 +16,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+// SỬA DÒNG NÀY: Dùng dấu nháy kép và hàm uri()
+        maven { url = uri("https://jitpack.io") }
     }
 }
 
