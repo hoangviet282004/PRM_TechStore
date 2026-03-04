@@ -110,12 +110,12 @@ public class ChatActivity extends AppCompatActivity {
                         chatAdapter.notifyItemInserted(mMessages.size() - 1);
                         rvChat.scrollToPosition(mMessages.size() - 1);
 //
-//                        // CHỈ ADMIN MỚI NHẬN THÔNG BÁO BANNER (ĐÃ TẮT CHO KHÁCH)
-//                        String myRole = SharedPrefsManager.getUserRole();
-//                        String myUser = SharedPrefsManager.getUsername();
-//                        if (!msg.getSenderUsername().equals(myUser) && "Admin".equalsIgnoreCase(myRole)) {
-//                            NotificationHelper.showChatNotification(this, "Tin nhắn từ khách", msg.getMessage());
-//                        }
+                        // CHỈ ADMIN MỚI NHẬN THÔNG BÁO BANNER (ĐÃ TẮT CHO KHÁCH)
+                        String myRole = SharedPrefsManager.getUserRole();
+                        String myUser = SharedPrefsManager.getUsername();
+                        if (!msg.getSenderUsername().equals(myUser) && "Admin".equalsIgnoreCase(myRole)) {
+                            NotificationHelper.showChatNotification(this, "Tin nhắn từ khách", msg.getMessage());
+                        }
                     });
                 }, throwable -> Log.e("CHAT", "Lỗi Subscribe: " + throwable.getMessage()));
 

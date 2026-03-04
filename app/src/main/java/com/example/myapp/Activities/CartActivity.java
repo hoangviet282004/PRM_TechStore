@@ -21,7 +21,7 @@ import retrofit2.Response;
 public class CartActivity extends AppCompatActivity {
     private ActivityCartBinding binding;
     private CartAdapter adapter;
-    private int currentCartId = -1; // Biến lưu trữ cartId để truyền sang Checkout
+    private int currentCartId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,17 +29,19 @@ public class CartActivity extends AppCompatActivity {
         binding = ActivityCartBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-
-        // THÊM DÒNG NÀY VÀO ĐÂY: Để xóa thông báo và dot khi khách vào xem giỏ hàng
-//        com.example.myapp.Utils.NotificationHelper.clearNotification(this);
+        // THIẾT LẬP TOOLBAR VÀ NÚT BACK
+        setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
 
         setupRecyclerView();
 
-        // Xử lý nút THANH TOÁN (10% điểm Billing)
         binding.btnCheckout.setOnClickListener(v -> {
             if (currentCartId != -1) {
                 Intent intent = new Intent(CartActivity.this, CheckoutActivity.class);
-                intent.putExtra("CART_ID", currentCartId); // Truyền cartId sang Checkout
+                intent.putExtra("CART_ID", currentCartId);
                 startActivity(intent);
             } else {
                 Toast.makeText(this, "Giỏ hàng hiện đang trống!", Toast.LENGTH_SHORT).show();
@@ -49,6 +51,21 @@ public class CartActivity extends AppCompatActivity {
         fetchCart();
     }
 
+    // FIX CHỖ NÀY: Quay lại thẳng MainActivity bằng cách đóng Activity hiện tại
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        // Tạo Intent để gọi lại MainActivity
+        Intent intent = new Intent(CartActivity.this, MainActivity.class);
+
+        // FLAG_ACTIVITY_CLEAR_TOP: Nếu MainActivity đã tồn tại, nó sẽ xóa sạch các trang nằm trên nó (như Detail)
+        // FLAG_ACTIVITY_SINGLE_TOP: Không tạo mới MainActivity mà dùng lại cái cũ đang chạy ngầm
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        startActivity(intent);
+        finish(); // Đóng trang Cart lại
+        return true;
+    }
     private void setupRecyclerView() {
         adapter = new CartAdapter(new CartAdapter.OnCartAction() {
             @Override
@@ -72,15 +89,9 @@ public class CartActivity extends AppCompatActivity {
             public void onResponse(Call<ApiResponse<CartResponse>> call, Response<ApiResponse<CartResponse>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     CartResponse data = response.body().getData();
-
-                    // Lưu lại ID giỏ hàng để dùng cho Checkout
                     currentCartId = data.getId();
-                    Log.d("CART_DEBUG", "Nhận được Cart ID: " + currentCartId);
-
-                    // Hiển thị danh sách sản phẩm (Cart Overview)
                     adapter.setData(data.getItems() != null ? data.getItems() : new ArrayList<>());
 
-                    // Hiển thị tổng tiền (Cart Total) - Fix Null Safety
                     if (data.getTotalPrice() != null) {
                         binding.tvCartTotal.setText(String.format("%,.0f VNĐ", data.getTotalPrice().doubleValue()));
                     } else {
@@ -88,33 +99,29 @@ public class CartActivity extends AppCompatActivity {
                     }
                 }
             }
-
             @Override
             public void onFailure(Call<ApiResponse<CartResponse>> call, Throwable t) {
-                Log.e("CART_DEBUG", "API Error: " + t.getMessage());
                 Toast.makeText(CartActivity.this, "Lỗi kết nối server!", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     private void updateQuantity(int productId, int qty) {
-        // PATCH: Cập nhật số lượng theo đúng logic BE
         ManageProductToCartRequest req = new ManageProductToCartRequest(productId, qty);
         RetrofitClient.getApiService().adjustQuantity(req).enqueue(new Callback<ApiResponse<CartResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<CartResponse>> c, Response<ApiResponse<CartResponse>> r) {
-                if (r.isSuccessful()) fetchCart(); // Làm mới giỏ hàng sau khi sửa
+                if (r.isSuccessful()) fetchCart();
             }
             @Override public void onFailure(Call<ApiResponse<CartResponse>> c, Throwable t) {}
         });
     }
 
     private void removeItem(int cartItemId) {
-        // DELETE: Xóa món hàng dựa trên ID bản ghi trong giỏ
         RetrofitClient.getApiService().removeItem(cartItemId).enqueue(new Callback<ApiResponse<CartResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<CartResponse>> c, Response<ApiResponse<CartResponse>> r) {
-                if (r.isSuccessful()) fetchCart(); // Làm mới giỏ hàng sau khi xóa
+                if (r.isSuccessful()) fetchCart();
             }
             @Override public void onFailure(Call<ApiResponse<CartResponse>> c, Throwable t) {}
         });

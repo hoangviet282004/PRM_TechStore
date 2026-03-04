@@ -1,11 +1,11 @@
 package com.example.myapp.Activities;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.myapp.RetrofitClient;
 import com.example.myapp.databinding.ActivityCheckoutBinding;
@@ -19,6 +19,7 @@ import retrofit2.Response;
 public class CheckoutActivity extends AppCompatActivity {
     private ActivityCheckoutBinding binding;
     private int cartId;
+    private ProgressDialog loadingDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,89 +27,70 @@ public class CheckoutActivity extends AppCompatActivity {
         binding = ActivityCheckoutBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        setSupportActionBar(binding.toolbarCheckout);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
+        loadingDialog = new ProgressDialog(this);
+        loadingDialog.setMessage("Đang chuẩn bị thanh toán...");
+        loadingDialog.setCancelable(false);
+
         cartId = getIntent().getIntExtra("CART_ID", -1);
-        Log.d("CHECKOUT_DEBUG", "Bắt đầu thanh toán PayOS cho Cart ID: " + cartId);
 
-        binding.btnPay.setOnClickListener(v -> createOrder());
+        binding.btnPay.setOnClickListener(v -> {
+            if (validateForm()) {
+                createOrder();
+            }
+        });
 
-        // Nhận kết quả từ Deep Link PayOS
         handleIntent(getIntent());
     }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        setIntent(intent);
-        handleIntent(intent);
-    }
+    private boolean validateForm() {
+        boolean isValid = true;
+        if (binding.etReceiverName.getText().toString().trim().isEmpty()) {
+            binding.tilReceiverName.setError("Nhập tên người nhận");
+            isValid = false;
+        } else binding.tilReceiverName.setError(null);
 
-    // Thêm hàm này vào trong class CheckoutActivity
-    private void showSuccessDialog() {
-        // Tạo Dialog không viền
-        android.app.Dialog dialog = new android.app.Dialog(this);
-        dialog.setContentView(com.example.myapp.R.layout.dialog_payment_success);
-        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        dialog.setCancelable(false); // Không cho tắt khi chưa bấm nút
+        if (binding.etReceiverPhone.getText().toString().trim().length() < 10) {
+            binding.tilReceiverPhone.setError("SĐT không hợp lệ");
+            isValid = false;
+        } else binding.tilReceiverPhone.setError(null);
 
-        // Ánh xạ nút bấm trong Dialog
-        View btnHome = dialog.findViewById(com.example.myapp.R.id.btnGoHome);
-        btnHome.setOnClickListener(v -> {
-            dialog.dismiss();
-            // Quay về MainActivity và xóa sạch các Activity cũ
-            Intent intent = new Intent(CheckoutActivity.this, MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
-        });
+        if (binding.etAddress.getText().toString().trim().isEmpty()) {
+            binding.tilAddress.setError("Nhập địa chỉ giao hàng");
+            isValid = false;
+        } else binding.tilAddress.setError(null);
 
-        dialog.show();
-    }
-
-    // Cập nhật lại hàm handleIntent cũ của ông
-    private void handleIntent(Intent intent) {
-        Uri data = intent.getData();
-        if (data != null && "techexpress".equals(data.getScheme())) {
-            String status = data.getQueryParameter("status");
-            if ("PAID".equalsIgnoreCase(status)) {
-                // GỌI DIALOG ĐẸP Ở ĐÂY
-                showSuccessDialog();
-            } else {
-                Toast.makeText(this, "Thanh toán chưa hoàn tất!", Toast.LENGTH_SHORT).show();
-                binding.btnPay.setEnabled(true);
-            }
-        }
+        return isValid;
     }
 
     private void createOrder() {
-        String address = binding.etAddress.getText().toString().trim();
-        if (address.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập địa chỉ!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
+        loadingDialog.show(); // HIỆN LOADING
         binding.btnPay.setEnabled(false);
-        Log.d("CHECKOUT_DEBUG", "Đang tạo Order PayOS trên Server...");
 
-        // QUAN TRỌNG: Gửi "PayOs" thay vì "VnPay"
-        CreateOrderRequest req = new CreateOrderRequest(cartId, "PayOs", address);
+        String fullAddress = "Người nhận: " + binding.etReceiverName.getText().toString() +
+                " | SĐT: " + binding.etReceiverPhone.getText().toString() +
+                " | ĐC: " + binding.etAddress.getText().toString();
+
+        CreateOrderRequest req = new CreateOrderRequest(cartId, "PayOs", fullAddress);
+
         RetrofitClient.getApiService().createOrder(req).enqueue(new Callback<ApiResponse<OrderResponse>>() {
             @Override
-            public void onResponse(Call<ApiResponse<OrderResponse>> call, Response<ApiResponse<OrderResponse>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<OrderResponse>> call, @NonNull Response<ApiResponse<OrderResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    int orderId = response.body().getData().getId();
-                    Log.d("CHECKOUT_DEBUG", "Tạo đơn thành công, đang lấy link thanh toán...");
-                    getPayOsPaymentUrl(orderId);
+                    getPayOsPaymentUrl(response.body().getData().getId());
                 } else {
+                    loadingDialog.dismiss();
                     binding.btnPay.setEnabled(true);
-                    Toast.makeText(CheckoutActivity.this, "Server từ chối yêu cầu!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(CheckoutActivity.this, "Lỗi tạo đơn!", Toast.LENGTH_SHORT).show();
                 }
             }
-
-            @Override
-            public void onFailure(Call<ApiResponse<OrderResponse>> call, Throwable t) {
+            @Override public void onFailure(@NonNull Call<ApiResponse<OrderResponse>> call, @NonNull Throwable t) {
+                loadingDialog.dismiss();
                 binding.btnPay.setEnabled(true);
-                Log.e("CHECKOUT_ERROR", "Lỗi tạo đơn: " + t.getMessage());
-                Toast.makeText(CheckoutActivity.this, "Lỗi kết nối Server!", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -116,23 +98,47 @@ public class CheckoutActivity extends AppCompatActivity {
     private void getPayOsPaymentUrl(int orderId) {
         RetrofitClient.getApiService().getPaymentUrl(orderId).enqueue(new Callback<ApiResponse<String>>() {
             @Override
-            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
-                binding.btnPay.setEnabled(true);
+            public void onResponse(@NonNull Call<ApiResponse<String>> call, @NonNull Response<ApiResponse<String>> response) {
+                loadingDialog.dismiss(); // TẮT LOADING
                 if (response.isSuccessful() && response.body() != null) {
-                    String url = response.body().getData();
-                    Log.d("CHECKOUT_DEBUG", "Mở trình duyệt: " + url);
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-                } else {
-                    Toast.makeText(CheckoutActivity.this, "Không thể lấy link thanh toán!", Toast.LENGTH_LONG).show();
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(response.body().getData())));
                 }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
                 binding.btnPay.setEnabled(true);
-                Log.e("CHECKOUT_ERROR", "Lỗi lấy link: " + t.getMessage());
-                Toast.makeText(CheckoutActivity.this, "Quá thời gian phản hồi (Timeout)!", Toast.LENGTH_LONG).show();
+            }
+            @Override public void onFailure(@NonNull Call<ApiResponse<String>> call, @NonNull Throwable t) {
+                loadingDialog.dismiss();
+                binding.btnPay.setEnabled(true);
             }
         });
+    }
+
+    // Logic về thẳng trang chủ khi nhấn nút Back
+    @Override
+    public boolean onSupportNavigateUp() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
+        return true;
+    }
+
+    private void handleIntent(Intent intent) {
+        Uri data = intent.getData();
+        if (data != null && "techexpress".equals(data.getScheme())) {
+            if ("PAID".equalsIgnoreCase(data.getQueryParameter("status"))) {
+                showSuccessDialog();
+            }
+        }
+    }
+
+    private void showSuccessDialog() {
+        android.app.Dialog dialog = new android.app.Dialog(this);
+        dialog.setContentView(com.example.myapp.R.layout.dialog_payment_success);
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialog.findViewById(com.example.myapp.R.id.btnGoHome).setOnClickListener(v -> {
+            dialog.dismiss();
+            onSupportNavigateUp();
+        });
+        dialog.show();
     }
 }

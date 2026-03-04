@@ -6,7 +6,9 @@ import com.example.myapp.models.request.ManageProductToCartRequest;
 import com.example.myapp.models.request.RefreshRequest;
 import com.example.myapp.models.request.SignUpRequest;
 import com.example.myapp.models.response.ApiResponse;
+import com.example.myapp.models.response.BrandResponse;
 import com.example.myapp.models.response.CartResponse;
+import com.example.myapp.models.response.CategoryResponse;
 import com.example.myapp.models.response.ChatMessageResponse;
 import com.example.myapp.models.response.ChatRoomResponse;
 import com.example.myapp.models.response.LoginResponse;
@@ -131,4 +133,12 @@ public interface ApiService {
     // 8. Kiểm tra trạng thái đọc của một tin nhắn cụ thể
     @GET("api/chat/messages/{messageId}/status")
     Call<ApiResponse<Map<String, Object>>> getMessageReadStatus(@Path("messageId") Integer messageId);
+
+    // Thêm vào ApiService.java
+    @GET("api/brands")
+    Call<ApiResponse<List<BrandResponse>>> getAllBrands();
+
+    // Thêm vào ApiService.java
+    @GET("api/categories")
+    Call<ApiResponse<List<CategoryResponse>>> getAllCategories();
 }

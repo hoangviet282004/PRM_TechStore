@@ -1,13 +1,14 @@
 package com.example.myapp.Activities;
 
 import android.os.Bundle;
+import android.util.Patterns;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.myapp.RetrofitClient;
 import com.example.myapp.databinding.ActivityRegisterBinding;
 import com.example.myapp.models.request.SignUpRequest;
 import com.example.myapp.models.response.SignUpResponse;
-
+import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -22,47 +23,102 @@ public class RegisterActivity extends AppCompatActivity {
         binding = ActivityRegisterBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Hết lỗi: btnRegister đã được định nghĩa trong XML ở trên
         binding.btnRegister.setOnClickListener(v -> {
-            // Lấy dữ liệu từ các ID bạn đã đặt trong XML
-            String user = binding.etRegUsername.getText().toString().trim();
-            String pass = binding.etRegPassword.getText().toString().trim();
-            String confirmPass = binding.etRegConfirmPassword.getText().toString().trim();
-            String email = binding.etRegEmail.getText().toString().trim();
-            String phone = binding.etRegPhone.getText().toString().trim();
-            String address = binding.etRegAddress.getText().toString().trim();
-
-            if (user.isEmpty() || pass.isEmpty() || email.isEmpty() || confirmPass.isEmpty()) {
-                Toast.makeText(this, "Vui lòng điền đủ thông tin bắt buộc", Toast.LENGTH_SHORT).show();
-            } else if (!pass.equals(confirmPass)) {
-                Toast.makeText(this, "Mật khẩu xác nhận không khớp!", Toast.LENGTH_SHORT).show();
-            } else {
-                handleRegister(user, pass, confirmPass, email, phone, address);
+            if (validateForm()) {
+                performRegister();
             }
         });
 
         binding.tvBackToLogin.setOnClickListener(v -> finish());
     }
 
-    private void handleRegister(String user, String pass, String confirm, String email, String phone, String addr) {
-        // Tạo request object theo đúng tài liệu API của bạn
-        SignUpRequest request = new SignUpRequest(user, pass, confirm, email, phone, addr);
+    private boolean validateForm() {
+        boolean isValid = true;
 
-        // Gọi API thực tế
+        // 1. Reset lỗi cũ
+        binding.tilRegUsername.setError(null);
+        binding.tilRegPassword.setError(null);
+        binding.tilRegConfirmPassword.setError(null);
+        binding.tilRegEmail.setError(null);
+
+        String user = binding.etRegUsername.getText().toString().trim();
+        String pass = binding.etRegPassword.getText().toString();
+        String confirm = binding.etRegConfirmPassword.getText().toString();
+        String email = binding.etRegEmail.getText().toString().trim();
+
+        // 2. Kiểm tra Username
+        if (user.isEmpty()) {
+            binding.tilRegUsername.setError("Bắt buộc nhập tên đăng nhập *");
+            isValid = false;
+        }
+
+        // 3. Kiểm tra Password
+        if (pass.isEmpty()) {
+            binding.tilRegPassword.setError("Vui lòng nhập mật khẩu *");
+            isValid = false;
+        } else if (pass.length() < 6) {
+            binding.tilRegPassword.setError("Mật khẩu phải từ 6 ký tự trở lên");
+            isValid = false;
+        }
+
+        // 4. Kiểm tra Confirm Password
+        if (!confirm.equals(pass)) {
+            binding.tilRegConfirmPassword.setError("Mật khẩu xác nhận không khớp *");
+            isValid = false;
+        }
+
+        // 5. Kiểm tra Email
+        if (email.isEmpty()) {
+            binding.tilRegEmail.setError("Vui lòng nhập Email *");
+            isValid = false;
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            binding.tilRegEmail.setError("Email không đúng định dạng *");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    private void performRegister() {
+        SignUpRequest request = new SignUpRequest(
+                binding.etRegUsername.getText().toString().trim(),
+                binding.etRegPassword.getText().toString(),
+                binding.etRegConfirmPassword.getText().toString(),
+                binding.etRegEmail.getText().toString().trim(),
+                binding.etRegPhone.getText().toString().trim(),
+                binding.etRegAddress.getText().toString().trim()
+        );
+
         RetrofitClient.getApiService().signUp(request).enqueue(new Callback<SignUpResponse>() {
             @Override
             public void onResponse(Call<SignUpResponse> call, Response<SignUpResponse> response) {
-                // Kiểm tra status code 201 như trong hình image_f827f1.png bạn gửi
-                if (response.isSuccessful() && response.body() != null && response.body().getStatusCode() == 201) {
+                if (response.isSuccessful() && response.body() != null) {
                     Toast.makeText(RegisterActivity.this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show();
-                    finish(); // Quay lại Login
+                    finish();
                 } else {
-                    Toast.makeText(RegisterActivity.this, "Đăng ký thất bại, hãy kiểm tra lại thông tin!", Toast.LENGTH_SHORT).show();
+                    try {
+                        // Show lỗi chi tiết từ Server
+                        String errorJson = response.errorBody().string();
+                        JSONObject errorObj = new JSONObject(errorJson);
+                        String message = errorObj.optString("message", "Đăng ký thất bại");
+
+                        if (message.toLowerCase().contains("username")) {
+                            binding.tilRegUsername.setError(message);
+                        } else if (message.toLowerCase().contains("email")) {
+                            binding.tilRegEmail.setError(message);
+                        } else {
+                            Toast.makeText(RegisterActivity.this, message, Toast.LENGTH_LONG).show();
+                        }
+                    } catch (Exception e) {
+                        Toast.makeText(RegisterActivity.this, "Lỗi không xác định", Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<SignUpResponse> call, Throwable t) {
-                Toast.makeText(RegisterActivity.this, "Lỗi kết nối Server: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(RegisterActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }

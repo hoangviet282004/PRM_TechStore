@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="24dp">
@@ -24,14 +23,14 @@
                 android:textColor="@color/black"
                 android:layout_marginBottom="32dp"/>
 
-
-
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilRegUsername"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Tên đăng nhập"
-                android:layout_marginBottom="12dp">
+                android:hint="Tên đăng nhập *"
+                app:errorEnabled="true"
+                android:layout_marginBottom="8dp">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etRegUsername"
                     android:layout_width="match_parent"
@@ -39,12 +38,14 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilRegPassword"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Mật khẩu"
+                android:hint="Mật khẩu *"
                 app:passwordToggleEnabled="true"
-                android:layout_marginBottom="12dp">
+                app:errorEnabled="true"
+                android:layout_marginBottom="8dp">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etRegPassword"
                     android:layout_width="match_parent"
@@ -53,12 +54,14 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilRegConfirmPassword"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Xác nhận mật khẩu"
+                android:hint="Xác nhận mật khẩu *"
                 app:passwordToggleEnabled="true"
-                android:layout_marginBottom="12dp">
+                app:errorEnabled="true"
+                android:layout_marginBottom="8dp">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etRegConfirmPassword"
                     android:layout_width="match_parent"
@@ -67,11 +70,13 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilRegEmail"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Email"
-                android:layout_marginBottom="12dp">
+                android:hint="Email *"
+                app:errorEnabled="true"
+                android:layout_marginBottom="8dp">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etRegEmail"
                     android:layout_width="match_parent"
@@ -80,11 +85,12 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilRegPhone"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Số điện thoại"
-                android:layout_marginBottom="12dp">
+                android:layout_marginBottom="8dp">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etRegPhone"
                     android:layout_width="match_parent"
