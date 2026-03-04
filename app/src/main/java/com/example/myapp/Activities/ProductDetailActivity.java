@@ -7,13 +7,14 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myapp.RetrofitClient;
+import com.example.myapp.SharedPrefsManager;
 import com.example.myapp.adapters.ImageSliderAdapter;
 import com.example.myapp.databinding.ActivityProductDetailBinding;
 import com.example.myapp.models.request.ManageProductToCartRequest;
 import com.example.myapp.models.response.ApiResponse;
 import com.example.myapp.models.response.CartResponse;
 import com.example.myapp.models.response.ProductDetailResponse;
-import com.google.android.material.tabs.TabLayoutMediator;
+import androidx.viewpager2.widget.ViewPager2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +51,7 @@ public class ProductDetailActivity extends AppCompatActivity {
             loadProductDetail(productId);
         }
         setupQuantityActions();
+        setupImageNavigation();
     }
 
     private void setupQuantityActions() {
@@ -66,7 +68,11 @@ public class ProductDetailActivity extends AppCompatActivity {
         });
 
         binding.btnAddToCart.setOnClickListener(v -> {
-            // Hiện ProgressBar đã khai báo trong XML
+            if (SharedPrefsManager.getAccessToken() == null) {
+                Toast.makeText(this, "Vui lòng đăng nhập để thêm vào giỏ hàng", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, LoginActivity.class));
+                return;
+            }
             binding.progressBar.setVisibility(View.VISIBLE);
             binding.btnAddToCart.setEnabled(false);
 
@@ -116,7 +122,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         if (detail.getAdditionalImageUrls() != null) images.addAll(detail.getAdditionalImageUrls());
 
         imageAdapter.setData(images);
-        new TabLayoutMediator(binding.tabIndicator, binding.vpProductImages, (tab, pos) -> {}).attach();
+        updateArrowVisibility(0, images.size());
 
         StringBuilder specs = new StringBuilder();
         if (detail.getTechnicalSpecifications() != null) {
@@ -125,6 +131,29 @@ public class ProductDetailActivity extends AppCompatActivity {
             }
         }
         binding.tvTechnicalSpecs.setText(specs.toString());
+    }
+
+    private void setupImageNavigation() {
+        binding.btnPrevImage.setOnClickListener(v -> {
+            int current = binding.vpProductImages.getCurrentItem();
+            if (current > 0) binding.vpProductImages.setCurrentItem(current - 1, true);
+        });
+        binding.btnNextImage.setOnClickListener(v -> {
+            int current = binding.vpProductImages.getCurrentItem();
+            int last = imageAdapter.getItemCount() - 1;
+            if (current < last) binding.vpProductImages.setCurrentItem(current + 1, true);
+        });
+        binding.vpProductImages.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                updateArrowVisibility(position, imageAdapter.getItemCount());
+            }
+        });
+    }
+
+    private void updateArrowVisibility(int position, int total) {
+        binding.btnPrevImage.setVisibility(total > 1 && position > 0 ? View.VISIBLE : View.GONE);
+        binding.btnNextImage.setVisibility(total > 1 && position < total - 1 ? View.VISIBLE : View.GONE);
     }
 
     @Override

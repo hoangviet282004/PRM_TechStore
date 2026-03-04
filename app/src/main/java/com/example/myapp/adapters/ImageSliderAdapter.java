@@ -18,7 +18,7 @@ public class ImageSliderAdapter extends RecyclerView.Adapter<ImageSliderAdapter.
         iv.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
-        iv.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
         return new ViewHolder(iv);
     }
 
@@ -32,7 +32,7 @@ public class ImageSliderAdapter extends RecyclerView.Adapter<ImageSliderAdapter.
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         String url = images.get(position);
         if (url != null && url.contains("localhost")) url = url.replace("localhost", "10.0.2.2");
-        Glide.with(holder.itemView.getContext()).load(url).into((ImageView) holder.itemView);
+        Glide.with(holder.itemView.getContext()).load(url).centerCrop().into((ImageView) holder.itemView);
     }
 
     @Override public int getItemCount() { return images != null ? images.size() : 0; }

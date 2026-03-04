@@ -3,7 +3,7 @@ package com.example.myapp;
 import android.content.Context;
 import android.content.SharedPreferences;
 import androidx.security.crypto.EncryptedSharedPreferences;
-import androidx.security.crypto.MasterKeys;
+import androidx.security.crypto.MasterKey;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
@@ -11,57 +11,78 @@ public class SharedPrefsManager {
     private static final String PREF_NAME = "SecureData";
     private static SharedPreferences sharedPreferences;
 
-    private static final String KEY_ACCESS = "access_token";
-    private static final String KEY_REFRESH = "refresh_token";
-    private static final String KEY_ROLE = "user_role"; // FIX: Thêm key để lưu Role
-
-    private static final String KEY_USERNAME = "username";
+    private static final String KEY_ACCESS    = "access_token";
+    private static final String KEY_REFRESH   = "refresh_token";
+    private static final String KEY_ROLE      = "user_role";
+    private static final String KEY_USERNAME  = "username";
 
     public static void init(Context context) {
         if (sharedPreferences == null) {
             try {
-                String masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
+                MasterKey masterKey = new MasterKey.Builder(context.getApplicationContext())
+                        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                        .build();
                 sharedPreferences = EncryptedSharedPreferences.create(
-                        PREF_NAME, masterKeyAlias, context,
+                        context.getApplicationContext(),
+                        PREF_NAME,
+                        masterKey,
                         EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
                 );
-            } catch (GeneralSecurityException | IOException e) { e.printStackTrace(); }
+            } catch (GeneralSecurityException | IOException e) {
+                throw new RuntimeException("Failed to initialize EncryptedSharedPreferences", e);
+            }
         }
     }
 
+    // Guard: ensures init() was called before any read/write
+    private static SharedPreferences prefs() {
+        if (sharedPreferences == null) {
+            throw new IllegalStateException("SharedPrefsManager not initialized. Call init() in Application.onCreate().");
+        }
+        return sharedPreferences;
+    }
+
+    // Atomic save of all login data in a single editor commit
+    public static void saveLoginData(String access, String refresh, String role, String username) {
+        prefs().edit()
+                .putString(KEY_ACCESS, access)
+                .putString(KEY_REFRESH, refresh)
+                .putString(KEY_ROLE, role)
+                .putString(KEY_USERNAME, username)
+                .apply();
+    }
+
     public static void saveTokens(String access, String refresh) {
-        sharedPreferences.edit()
+        prefs().edit()
                 .putString(KEY_ACCESS, access)
                 .putString(KEY_REFRESH, refresh)
                 .apply();
     }
 
-    // THÊM: Hàm lưu Role khi Login thành công
     public static void saveUserRole(String role) {
-        sharedPreferences.edit().putString(KEY_ROLE, role).apply();
+        prefs().edit().putString(KEY_ROLE, role).apply();
     }
 
     public static String getAccessToken() {
-        return sharedPreferences.getString(KEY_ACCESS, null);
+        return prefs().getString(KEY_ACCESS, null);
     }
 
     public static String getRefreshToken() {
-        return sharedPreferences.getString(KEY_REFRESH, null);
+        return prefs().getString(KEY_REFRESH, null);
     }
 
-    // THÊM: Hàm lấy Role để phân luồng Chat
+    // Returns null if no role saved — callers should handle null explicitly
     public static String getUserRole() {
-        return sharedPreferences.getString(KEY_ROLE, "Customer"); // Mặc định là Customer
+        return prefs().getString(KEY_ROLE, null);
     }
-
 
     public static void saveUsername(String username) {
-        sharedPreferences.edit().putString(KEY_USERNAME, username).apply();
+        prefs().edit().putString(KEY_USERNAME, username).apply();
     }
 
     public static String getUsername() {
-        return sharedPreferences.getString(KEY_USERNAME, "");
+        return prefs().getString(KEY_USERNAME, "");
     }
 
     public static void clearAll() {

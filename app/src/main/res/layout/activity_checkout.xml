@@ -35,11 +35,11 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="16dp"
-                android:textColor="@color/color_text_primary"/>
+                android:textColor="@color/color_text_primary" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilReceiverName"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Họ tên người nhận *"
@@ -48,12 +48,13 @@
                     android:id="@+id/etReceiverName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textPersonName" />
+                    android:inputType="textPersonName"
+                    android:imeOptions="actionNext" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilReceiverPhone"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -63,12 +64,13 @@
                     android:id="@+id/etReceiverPhone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="phone" />
+                    android:inputType="phone"
+                    android:imeOptions="actionNext" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilAddress"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -78,7 +80,9 @@
                     android:id="@+id/etAddress"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textPostalAddress" />
+                    android:inputType="textMultiLine"
+                    android:imeOptions="actionDone"
+                    android:maxLines="4" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.button.MaterialButton
@@ -89,7 +93,32 @@
                 android:layout_height="60dp"
                 app:cornerRadius="12dp"
                 android:textStyle="bold"
-                android:textSize="16sp"/>
+                android:textSize="16sp" />
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <!-- Loading overlay (replaces deprecated ProgressDialog) -->
+    <LinearLayout
+        android:id="@+id/loadingOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true">
+        <ProgressBar
+            android:layout_width="48dp"
+            android:layout_height="48dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Đang chuẩn bị thanh toán..."
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
+    </LinearLayout>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

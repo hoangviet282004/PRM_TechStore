@@ -2,14 +2,36 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="end"
-    android:padding="8dp">
-    <TextView
-        android:id="@+id/tvMessageSent"
+    android:paddingStart="52dp"
+    android:paddingEnd="8dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp">
+
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_quantity"
-        android:backgroundTint="@color/color_primary"
-        android:padding="10dp"
-        android:textColor="@color/color_text_primary"
-        android:textSize="16sp" />
+        android:orientation="vertical"
+        android:gravity="end">
+
+        <TextView
+            android:id="@+id/tvMessageSent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_quantity"
+            android:backgroundTint="@color/color_primary"
+            android:padding="10dp"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:maxWidth="260dp" />
+
+        <TextView
+            android:id="@+id/tvTimeSent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:textColor="@color/color_text_secondary"
+            android:layout_marginTop="2dp" />
+
+    </LinearLayout>
+
 </LinearLayout>

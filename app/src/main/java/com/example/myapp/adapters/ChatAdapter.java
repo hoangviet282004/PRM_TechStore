@@ -14,8 +14,8 @@ import java.util.List;
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int TYPE_SENT = 1;
     private static final int TYPE_RECEIVED = 2;
-    private List<ChatMessageResponse> mMessages;
-    private String currentUsername;
+    private final List<ChatMessageResponse> mMessages;
+    private final String currentUsername;
 
     public ChatAdapter(List<ChatMessageResponse> messages) {
         this.mMessages = messages;
@@ -25,13 +25,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @Override
     public int getItemViewType(int position) {
         ChatMessageResponse msg = mMessages.get(position);
-
-        // Quy tắc cố định: Admin bên PHẢI, Khách bên TRÁI
-        if ("admin".equalsIgnoreCase(msg.getSenderUsername())) {
-            return TYPE_SENT; // Layout bên PHẢI (Admin)
-        } else {
-            return TYPE_RECEIVED; // Layout bên TRÁI (Khách hàng)
+        if (msg.getSenderUsername() != null && msg.getSenderUsername().equals(currentUsername)) {
+            return TYPE_SENT;
         }
+        return TYPE_RECEIVED;
     }
 
     @NonNull
@@ -50,22 +47,46 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ChatMessageResponse msg = mMessages.get(position);
         if (holder instanceof SentViewHolder) {
-            ((SentViewHolder) holder).tvMsg.setText(msg.getMessage());
+            SentViewHolder sent = (SentViewHolder) holder;
+            sent.tvMsg.setText(msg.getMessage());
+            sent.tvTime.setText(formatTime(msg.getSentAt()));
         } else {
-            ((ReceivedViewHolder) holder).tvMsg.setText(msg.getMessage());
+            ReceivedViewHolder received = (ReceivedViewHolder) holder;
+            received.tvMsg.setText(msg.getMessage());
+            received.tvSenderName.setText(msg.getSenderUsername());
+            received.tvTime.setText(formatTime(msg.getSentAt()));
         }
     }
 
     @Override
     public int getItemCount() { return mMessages.size(); }
 
+    // Extracts "HH:mm" from ISO-8601 strings like "2024-01-15T14:30:00" or "2024-01-15T14:30:00.000"
+    private static String formatTime(String sentAt) {
+        if (sentAt == null || sentAt.isEmpty()) return "";
+        int tIndex = sentAt.indexOf('T');
+        if (tIndex > 0 && sentAt.length() > tIndex + 5) {
+            return sentAt.substring(tIndex + 1, tIndex + 6);
+        }
+        return sentAt;
+    }
+
     static class SentViewHolder extends RecyclerView.ViewHolder {
-        TextView tvMsg;
-        SentViewHolder(View v) { super(v); tvMsg = v.findViewById(R.id.tvMessageSent); }
+        TextView tvMsg, tvTime;
+        SentViewHolder(View v) {
+            super(v);
+            tvMsg = v.findViewById(R.id.tvMessageSent);
+            tvTime = v.findViewById(R.id.tvTimeSent);
+        }
     }
 
     static class ReceivedViewHolder extends RecyclerView.ViewHolder {
-        TextView tvMsg;
-        ReceivedViewHolder(View v) { super(v); tvMsg = v.findViewById(R.id.tvMessageReceived); }
+        TextView tvMsg, tvSenderName, tvTime;
+        ReceivedViewHolder(View v) {
+            super(v);
+            tvMsg = v.findViewById(R.id.tvMessageReceived);
+            tvSenderName = v.findViewById(R.id.tvSenderName);
+            tvTime = v.findViewById(R.id.tvTimeReceived);
+        }
     }
 }

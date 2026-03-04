@@ -123,7 +123,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void loadChatHistory(int roomId) {
-        RetrofitClient.getApiService().getMessages(jwtToken, roomId, 0, 50).enqueue(new Callback<ApiResponse<PageResponse<ChatMessageResponse>>>() {
+        RetrofitClient.getApiService().getMessages(roomId, 0, 50).enqueue(new Callback<ApiResponse<PageResponse<ChatMessageResponse>>>() {
             @Override
             public void onResponse(Call<ApiResponse<PageResponse<ChatMessageResponse>>> call, Response<ApiResponse<PageResponse<ChatMessageResponse>>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -147,7 +147,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void fetchRoomAndSubscribe() {
-        RetrofitClient.getApiService().getMyRoom(jwtToken).enqueue(new Callback<ApiResponse<ChatRoomResponse>>() {
+        RetrofitClient.getApiService().getMyRoom().enqueue(new Callback<ApiResponse<ChatRoomResponse>>() {
             @Override public void onResponse(Call<ApiResponse<ChatRoomResponse>> call, Response<ApiResponse<ChatRoomResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     roomId = response.body().getData().getRoomId();
@@ -166,7 +166,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void markAsRead(int roomId) {
-        RetrofitClient.getApiService().markAsRead(jwtToken, roomId).enqueue(new Callback<ApiResponse<Map<String, Integer>>>() {
+        RetrofitClient.getApiService().markAsRead(roomId).enqueue(new Callback<ApiResponse<Map<String, Integer>>>() {
             @Override public void onResponse(Call<ApiResponse<Map<String, Integer>>> call, Response<ApiResponse<Map<String, Integer>>> response) {}
             @Override public void onFailure(Call<ApiResponse<Map<String, Integer>>> call, Throwable t) {}
         });

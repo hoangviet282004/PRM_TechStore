@@ -12,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,6 +22,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
+import com.google.android.material.slider.RangeSlider;
 
 import com.example.myapp.R;
 import com.example.myapp.RetrofitClient;
@@ -57,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private List<CategoryResponse> categoryList = new ArrayList<>();
     private List<BrandResponse> brandList = new ArrayList<>();
 
-    // Polling Badge Chat (3 giây)
+    // Polling Badge Chat (10 giây)
     private final Handler badgeHandler = new Handler();
     private final Runnable badgeRunnable = new Runnable() {
         @Override
@@ -70,12 +72,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SharedPrefsManager.init(this);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
 
-        WorkManager.getInstance(this).cancelAllWork();
+        WorkManager.getInstance(this).cancelUniqueWork("UniqueCartBadgeCheck");
         checkNotificationPermission();
         setupRecyclerView();
         setupSearchAndFilters();
@@ -98,11 +99,19 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // Updates FAB visibility and refreshes the toolbar menu based on auth state
+    private void updateAuthState() {
+        boolean isLoggedIn = SharedPrefsManager.getAccessToken() != null;
+        binding.fabChat.setVisibility(isLoggedIn ? View.VISIBLE : View.GONE);
+        invalidateOptionsMenu();
+    }
+
     private void setupSearchAndFilters() {
         // Tìm kiếm theo từ khóa
         binding.etSearch.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                currentKeyword = binding.etSearch.getText().toString().trim();
+                String kw = binding.etSearch.getText().toString().trim();
+                currentKeyword = kw.isEmpty() ? null : kw;
                 loadProductsFromBE();
                 return true;
             }
@@ -116,15 +125,56 @@ public class MainActivity extends AppCompatActivity {
             loadProductsFromBE();
         });
 
+        // Khởi tạo slider khoảng giá
+        binding.rsPrice.setValues(0f, 50_000_000f);
+        binding.rsPrice.setLabelFormatter(value -> {
+            long v = (long) value;
+            if (v == 0) return "Min";
+            if (v >= 50_000_000) return "Max";
+            if (v >= 1_000_000) return String.format("%.1f tr", value / 1_000_000f);
+            return String.format("%.0f K", value / 1_000f);
+        });
+
+        // Slider → text input sync
+        binding.rsPrice.addOnChangeListener((slider, value, fromUser) -> {
+            if (fromUser) {
+                long minVal = slider.getValues().get(0).longValue();
+                long maxVal = slider.getValues().get(1).longValue();
+                binding.etMinPrice.setText(minVal == 0 ? "" : String.valueOf(minVal));
+                binding.etMaxPrice.setText(maxVal == 50_000_000L ? "" : String.valueOf(maxVal));
+            }
+        });
+
+        // Text input → slider sync (on focus lost)
+        View.OnFocusChangeListener syncToSlider = (v, hasFocus) -> {
+            if (!hasFocus) {
+                try {
+                    String minStr = binding.etMinPrice.getText().toString().trim();
+                    String maxStr = binding.etMaxPrice.getText().toString().trim();
+                    float minF = minStr.isEmpty() ? 0f : Float.parseFloat(minStr);
+                    float maxF = maxStr.isEmpty() ? 50_000_000f : Float.parseFloat(maxStr);
+                    minF = Math.max(0f, Math.min(minF, 50_000_000f));
+                    maxF = Math.max(0f, Math.min(maxF, 50_000_000f));
+                    if (minF > maxF) minF = maxF;
+                    // Snap to nearest step (500,000)
+                    minF = Math.round(minF / 500_000f) * 500_000f;
+                    maxF = Math.round(maxF / 500_000f) * 500_000f;
+                    binding.rsPrice.setValues(minF, maxF);
+                } catch (NumberFormatException ignored) {}
+            }
+        };
+        binding.etMinPrice.setOnFocusChangeListener(syncToSlider);
+        binding.etMaxPrice.setOnFocusChangeListener(syncToSlider);
+
         // Nút Lọc tổng hợp
         binding.btnApplyFilter.setOnClickListener(v -> {
+            // Cập nhật keyword từ ô tìm kiếm
+            String kw = binding.etSearch.getText().toString().trim();
+            currentKeyword = kw.isEmpty() ? null : kw;
+
             // Lấy ID từ Category Spinner
             int catePos = binding.spCategories.getSelectedItemPosition();
             selectedCategoryId = (catePos > 0) ? categoryList.get(catePos - 1).getId() : null;
-
-            // Lấy ID từ Brand Spinner (Nếu ông đã thêm spBrands vào XML)
-            // int brandPos = binding.spBrands.getSelectedItemPosition();
-            // selectedBrandId = (brandPos > 0) ? brandList.get(brandPos - 1).getId() : null;
 
             loadProductsFromBE();
         });
@@ -192,19 +242,19 @@ public class MainActivity extends AppCompatActivity {
                     adapter.setData(response.body().getData().getContent());
                 }
             }
-            @Override public void onFailure(@NonNull Call<ApiResponse<PageResponse<ProductListResponse>>> call, @NonNull Throwable t) {}
+            @Override public void onFailure(@NonNull Call<ApiResponse<PageResponse<ProductListResponse>>> call, @NonNull Throwable t) {
+                Toast.makeText(MainActivity.this, "Không thể tải sản phẩm. Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
     // Logic cập nhật Badge Chat giữ nguyên (đã tối ưu 3s)
     public void updateChatBadge() {
-        String token = SharedPrefsManager.getAccessToken();
-        if (token == null) return;
-        String bearerToken = "Bearer " + token;
+        if (SharedPrefsManager.getAccessToken() == null) return;
         String role = SharedPrefsManager.getUserRole();
 
         if ("Admin".equalsIgnoreCase(role)) {
-            RetrofitClient.getApiService().getAdminRooms(bearerToken, 0, 100).enqueue(new Callback<ApiResponse<PageResponse<ChatRoomResponse>>>() {
+            RetrofitClient.getApiService().getAdminRooms(0, 100).enqueue(new Callback<ApiResponse<PageResponse<ChatRoomResponse>>>() {
                 @Override
                 public void onResponse(@NonNull Call<ApiResponse<PageResponse<ChatRoomResponse>>> call, @NonNull Response<ApiResponse<PageResponse<ChatRoomResponse>>> response) {
                     if (response.isSuccessful() && response.body() != null) {
@@ -218,7 +268,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override public void onFailure(@NonNull Call<ApiResponse<PageResponse<ChatRoomResponse>>> call, @NonNull Throwable t) {}
             });
         } else {
-            RetrofitClient.getApiService().getMyRoom(bearerToken).enqueue(new Callback<ApiResponse<ChatRoomResponse>>() {
+            RetrofitClient.getApiService().getMyRoom().enqueue(new Callback<ApiResponse<ChatRoomResponse>>() {
                 @Override
                 public void onResponse(@NonNull Call<ApiResponse<ChatRoomResponse>> call, @NonNull Response<ApiResponse<ChatRoomResponse>> response) {
                     if (response.isSuccessful() && response.body() != null) {
@@ -263,20 +313,42 @@ public class MainActivity extends AppCompatActivity {
 
     private void performLogout() {
         SharedPrefsManager.clearAll();
-        Intent intent = new Intent(this, LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
+        Toast.makeText(this, "Đã đăng xuất", Toast.LENGTH_SHORT).show();
+        updateAuthState();
     }
 
-    @Override public boolean onCreateOptionsMenu(Menu menu) { getMenuInflater().inflate(R.menu.main_menu, menu); return true; }
-    @Override public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_map) startActivity(new Intent(this, MapActivity.class));
-        else if (item.getItemId() == R.id.action_logout) performLogout();
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        boolean isLoggedIn = SharedPrefsManager.getAccessToken() != null;
+        menu.findItem(R.id.action_login).setVisible(!isLoggedIn);
+        menu.findItem(R.id.action_cart).setVisible(isLoggedIn);
+        menu.findItem(R.id.action_username).setVisible(isLoggedIn);
+        menu.findItem(R.id.action_logout).setVisible(isLoggedIn);
+        if (isLoggedIn) {
+            String username = SharedPrefsManager.getUsername();
+            menu.findItem(R.id.action_username).setTitle(
+                    (username != null && !username.isEmpty()) ? username : "Tài khoản");
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_map) startActivity(new Intent(this, MapActivity.class));
+        else if (id == R.id.action_cart) startActivity(new Intent(this, CartActivity.class));
+        else if (id == R.id.action_login) startActivity(new Intent(this, LoginActivity.class));
+        else if (id == R.id.action_logout) performLogout();
         return super.onOptionsItemSelected(item);
     }
 
-    @Override protected void onStart() { super.onStart(); badgeHandler.post(badgeRunnable); }
+    @Override protected void onStart() { super.onStart(); updateAuthState(); badgeHandler.post(badgeRunnable); }
     @Override protected void onStop() { super.onStop(); badgeHandler.removeCallbacks(badgeRunnable); }
-    @Override protected void onResume() { super.onResume(); updateChatBadge(); }
+    @Override protected void onResume() { super.onResume(); }
 }

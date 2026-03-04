@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
-            app:title="TechExpress"
+            app:title="TechStore"
             app:titleTextColor="@android:color/white" />
 
         <androidx.cardview.widget.CardView
@@ -23,7 +23,8 @@
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
             app:cardCornerRadius="8dp"
-            app:cardElevation="2dp">
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/color_surface_variant">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -82,6 +83,35 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="12dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Khoảng giá (VNĐ):"
+                        android:textColor="@color/color_text_secondary"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="4dp" />
+
+                    <com.google.android.material.slider.RangeSlider
+                        android:id="@+id/rsPrice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="4dp"
+                        android:valueFrom="0"
+                        android:valueTo="50000000"
+                        android:stepSize="500000"
+                        app:thumbColor="@color/color_primary"
+                        app:thumbRadius="10dp"
+                        app:thumbStrokeWidth="2dp"
+                        app:thumbStrokeColor="@android:color/white"
+                        app:thumbElevation="4dp"
+                        app:trackHeight="5dp"
+                        app:trackColorActive="@color/color_primary"
+                        app:trackColorInactive="@color/color_divider"
+                        app:haloColor="#290066FF"
+                        app:tickVisible="false"
+                        app:labelBehavior="floating" />
 
                     <LinearLayout
                         android:layout_width="match_parent"

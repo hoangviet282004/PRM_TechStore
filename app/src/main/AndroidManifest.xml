@@ -14,6 +14,7 @@
 
 
     <application
+        android:name=".MyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:networkSecurityConfig="@xml/network_security_config"
@@ -31,17 +32,18 @@
 
         <activity android:name=".Activities.MapActivity" />
 
+        <activity android:name=".Activities.LoginActivity" android:exported="false" />
+
+        <activity android:name=".Activities.RegisterActivity" android:exported="false" />
+
         <activity
-            android:name=".Activities.LoginActivity"
+            android:name=".Activities.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".Activities.RegisterActivity" android:exported="false" />
-        <activity android:name=".Activities.MainActivity" android:exported="false" />
         <activity android:name=".Activities.ProductDetailActivity" android:exported="false" android:label="Chi tiết sản phẩm" />
         <activity android:name=".Activities.CartActivity" android:exported="false" android:label="Giỏ hàng của tôi" />
         <activity android:name=".Activities.ChatActivity" android:label="Hỗ trợ trực tuyến" />
@@ -61,6 +63,11 @@
             </intent-filter>
         </activity>
 
+
+        <activity
+            android:name=".Activities.PaymentWebViewActivity"
+            android:exported="false"
+            android:label="Thanh toán" />
 
         <activity
             android:name=".Activities.CheckoutActivity"

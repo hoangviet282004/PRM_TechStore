@@ -22,14 +22,27 @@
                 android:layout_height="match_parent"
                 app:layout_collapseMode="parallax" />
 
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/tabIndicator"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|center_horizontal"
-                android:layout_marginBottom="16dp"
-                app:tabBackground="@drawable/dot_selector"
-                app:tabIndicatorHeight="0dp" />
+            <ImageButton
+                android:id="@+id/btnPrevImage"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_arrow_button"
+                android:src="@drawable/ic_arrow_left"
+                android:contentDescription="Ảnh trước"
+                android:visibility="gone" />
+
+            <ImageButton
+                android:id="@+id/btnNextImage"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_arrow_button"
+                android:src="@drawable/ic_arrow_right"
+                android:contentDescription="Ảnh tiếp theo"
+                android:visibility="gone" />
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"

@@ -7,8 +7,30 @@
         android:title="Vị trí cửa hàng"
         app:showAsAction="ifRoom" />
 
+    <!-- Shown when logged in -->
+    <item
+        android:id="@+id/action_cart"
+        android:icon="@drawable/ic_cart"
+        android:title="Giỏ hàng"
+        app:showAsAction="ifRoom" />
+
+    <!-- Shown when NOT logged in -->
+    <item
+        android:id="@+id/action_login"
+        android:title="Đăng nhập"
+        app:showAsAction="ifRoom" />
+
+    <!-- Shown when logged in: displays the username (non-clickable) -->
+    <item
+        android:id="@+id/action_username"
+        android:title=""
+        android:enabled="false"
+        app:showAsAction="never" />
+
+    <!-- Shown when logged in -->
     <item
         android:id="@+id/action_logout"
         android:title="Đăng xuất"
         app:showAsAction="never" />
+
 </menu>

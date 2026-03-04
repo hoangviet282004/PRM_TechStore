@@ -7,7 +7,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.myapp.RetrofitClient;
-import com.example.myapp.SharedPrefsManager;
 import com.example.myapp.adapters.AdminChatAdapter;
 import com.example.myapp.models.response.ApiResponse;
 import com.example.myapp.models.response.ChatRoomResponse;
@@ -44,9 +43,7 @@ public class AdminChatListActivity extends AppCompatActivity {
     }
 
     private void loadRooms() {
-        String token = "Bearer " + SharedPrefsManager.getAccessToken();
-        // Gọi API lấy danh sách phòng dành cho Admin
-        RetrofitClient.getApiService().getAdminRooms(token, 0, 20).enqueue(new Callback<ApiResponse<PageResponse<ChatRoomResponse>>>() {
+        RetrofitClient.getApiService().getAdminRooms(0, 20).enqueue(new Callback<ApiResponse<PageResponse<ChatRoomResponse>>>() {
             @Override
             public void onResponse(Call<ApiResponse<PageResponse<ChatRoomResponse>>> call, Response<ApiResponse<PageResponse<ChatRoomResponse>>> response) {
                 if (response.isSuccessful() && response.body() != null) {

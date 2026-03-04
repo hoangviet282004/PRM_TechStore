@@ -22,13 +22,6 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SharedPrefsManager.init(this);
-
-        if (SharedPrefsManager.getAccessToken() != null) {
-            navigateToMain();
-            return;
-        }
-
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         setupListeners();
@@ -65,8 +58,9 @@ public class LoginActivity extends AppCompatActivity {
                     SharedPrefsManager.saveTokens(access, refresh);
                     SharedPrefsManager.saveUserRole(role);
 
-                    Toast.makeText(LoginActivity.this, "Chào mừng " + role, Toast.LENGTH_SHORT).show();
-                    navigateToMain();
+                    SharedPrefsManager.saveUsername(username);
+                    Toast.makeText(LoginActivity.this, "Chào mừng " + username, Toast.LENGTH_SHORT).show();
+                    finish();
                 } else {
                     Toast.makeText(LoginActivity.this, "Sai tài khoản hoặc mật khẩu", Toast.LENGTH_SHORT).show();
                 }
@@ -104,8 +98,4 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private void navigateToMain() {
-        startActivity(new Intent(this, MainActivity.class));
-        finish();
-    }
 }

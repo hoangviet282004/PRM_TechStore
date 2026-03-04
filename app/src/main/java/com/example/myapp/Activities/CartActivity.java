@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.myapp.RetrofitClient;
+import com.example.myapp.SharedPrefsManager;
 import com.example.myapp.adapters.CartAdapter;
 import com.example.myapp.databinding.ActivityCartBinding;
 import com.example.myapp.models.request.ManageProductToCartRequest;
@@ -26,6 +27,14 @@ public class CartActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (SharedPrefsManager.getAccessToken() == null) {
+            Toast.makeText(this, "Vui lòng đăng nhập để xem giỏ hàng", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
+
         binding = ActivityCartBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
