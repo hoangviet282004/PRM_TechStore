@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/white"
+    android:background="@color/color_surface"
     android:foreground="?attr/selectableItemBackground"
     android:padding="16dp"
     android:layout_marginBottom="1dp">
@@ -13,7 +13,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Tên khách hàng"
-        android:textColor="#212121"
+        android:textColor="@color/color_text_primary"
         android:textSize="16sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -28,7 +28,7 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:text="Nội dung tin nhắn cuối cùng..."
-        android:textColor="#757575"
+        android:textColor="@color/color_text_secondary"
         app:layout_constraintEnd_toStartOf="@+id/txtUnreadCount"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txtClientName" />

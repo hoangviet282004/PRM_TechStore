@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
+    android:background="@color/color_background"
     android:padding="24dp">
 
     <ImageView
@@ -16,7 +17,7 @@
     android:layout_height="wrap_content"
     android:layout_marginTop="24dp"
     android:text="Thanh Toán Thành Công"
-    android:textColor="@color/black"
+    android:textColor="@color/color_text_primary"
     android:textSize="22sp"
     android:textStyle="bold" />
 
@@ -34,7 +35,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="48dp"
-        android:backgroundTint="@color/black"
+        android:backgroundTint="@color/color_primary"
         android:text="Quay về Trang chủ"
         android:textColor="@color/white" />
 </LinearLayout>

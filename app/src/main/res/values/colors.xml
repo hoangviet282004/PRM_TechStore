@@ -2,4 +2,16 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Dark Tech Theme -->
+    <color name="color_background">#0D1B2A</color>
+    <color name="color_surface">#1E2D3D</color>
+    <color name="color_surface_variant">#243447</color>
+    <color name="color_primary">#0066FF</color>
+    <color name="color_primary_variant">#0052CC</color>
+    <color name="color_accent">#FF6B35</color>
+    <color name="color_text_primary">#FFFFFF</color>
+    <color name="color_text_secondary">#B0BEC5</color>
+    <color name="color_divider">#2A3F55</color>
+    <color name="color_delete">#FF5252</color>
 </resources>

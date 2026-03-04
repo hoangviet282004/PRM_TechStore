@@ -27,7 +27,7 @@
             android:text="Thanh toán thành công!"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:textColor="#333333"
+            android:textColor="@color/color_text_primary"
             android:layout_marginTop="16dp"/>
 
         <TextView
@@ -36,7 +36,7 @@
             android:text="Đơn hàng của ông đang được hệ thống xử lý. Cảm ơn ông đã ủng hộ TechExpress!"
             android:gravity="center"
             android:layout_marginTop="8dp"
-            android:textColor="#666666"/>
+            android:textColor="@color/color_text_secondary"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnGoHome"
@@ -45,7 +45,7 @@
             android:text="Tiếp tục mua sắm"
             android:layout_marginTop="24dp"
             app:cornerRadius="12dp"
-            android:backgroundTint="#2196F3"/>
+            android:backgroundTint="@color/color_primary"/>
 
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

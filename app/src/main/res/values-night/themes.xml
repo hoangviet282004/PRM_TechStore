@@ -1,7 +1,20 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.MyApp" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+    <!-- Dark Tech Theme (same as default — always dark) -->
+    <style name="Base.Theme.MyApp" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorOnPrimary">@color/color_text_primary</item>
+        <item name="colorPrimaryContainer">@color/color_primary_variant</item>
+        <item name="colorOnPrimaryContainer">@color/color_text_primary</item>
+        <item name="colorSecondary">@color/color_accent</item>
+        <item name="colorOnSecondary">@color/color_text_primary</item>
+        <item name="colorSecondaryContainer">@color/color_surface_variant</item>
+        <item name="colorOnSecondaryContainer">@color/color_text_primary</item>
+        <item name="android:colorBackground">@color/color_background</item>
+        <item name="colorOnBackground">@color/color_text_primary</item>
+        <item name="colorSurface">@color/color_surface</item>
+        <item name="colorOnSurface">@color/color_text_primary</item>
+        <item name="colorSurfaceVariant">@color/color_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/color_text_secondary</item>
+        <item name="colorOutline">@color/color_divider</item>
     </style>
 </resources>

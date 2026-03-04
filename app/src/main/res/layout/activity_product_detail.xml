@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9FA">
+    android:background="@color/color_background">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -57,8 +57,8 @@
 
             <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" app:cardCornerRadius="16dp">
                 <LinearLayout android:padding="16dp" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content">
-                    <TextView android:id="@+id/tvDetailName" android:textSize="22sp" android:textStyle="bold" android:textColor="@color/black" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-                    <TextView android:id="@+id/tvDetailPrice" android:textColor="?attr/colorPrimary" android:textSize="20sp" android:textStyle="bold" android:layout_marginTop="8dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/tvDetailName" android:textSize="22sp" android:textStyle="bold" android:textColor="@color/color_text_primary" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/tvDetailPrice" android:textColor="@color/color_accent" android:textSize="20sp" android:textStyle="bold" android:layout_marginTop="8dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -77,7 +77,7 @@
                 <LinearLayout android:padding="16dp" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content">
                     <TextView android:text="Thông số kỹ thuật" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                     <TextView android:id="@+id/tvTechnicalSpecs" android:layout_marginTop="8dp" android:lineSpacingExtra="4dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-                    <View android:background="#EEEEEE" android:layout_marginVertical="16dp" android:layout_width="match_parent" android:layout_height="1dp"/>
+                    <View android:background="@color/color_divider" android:layout_marginVertical="16dp" android:layout_width="match_parent" android:layout_height="1dp"/>
                     <TextView android:text="Mô tả sản phẩm" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                     <TextView android:id="@+id/tvFullDescription" android:layout_marginTop="8dp" android:lineSpacingExtra="4dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
                 </LinearLayout>
