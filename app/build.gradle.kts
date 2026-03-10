@@ -57,7 +57,7 @@ dependencies {
     implementation("androidx.core:core:1.12.0")
     implementation("androidx.work:work-runtime:2.9.0")
 
-    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-maps:20.0.0")
     implementation("com.google.android.gms:play-services-location:21.1.0")
 
     // WebSocket & RxJava cho Chat
