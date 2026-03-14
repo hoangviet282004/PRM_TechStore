@@ -9,5 +9,9 @@ public class OrderResponse {
     private String orderDate; // BE trả về Instant
 
     public Integer getId() { return id; }
+    public Integer getCartId() { return cartId; }
+    public String getPaymentMethod() { return paymentMethod; }
+    public String getBillingAddress() { return billingAddress; }
     public String getOrderStatus() { return orderStatus; }
+    public String getOrderDate() { return orderDate; }
 }

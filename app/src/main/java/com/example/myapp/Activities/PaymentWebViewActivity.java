@@ -10,6 +10,7 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.myapp.R;
 import com.example.myapp.databinding.ActivityPaymentWebviewBinding;
@@ -49,7 +50,14 @@ public class PaymentWebViewActivity extends AppCompatActivity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
-                if ("techexpress".equals(uri.getScheme())) {
+                // Intercept the PayOS server callback before the WebView tries to connect.
+                // Covers both localhost (emulator) and 10.0.2.2, and the techexpress:// deep link.
+                String path = uri.getPath() != null ? uri.getPath() : "";
+                if (path.contains("payos-cancel")) {
+                    navigateToResult(false, null);
+                    return true;
+                }
+                if (path.contains("payos-return") || "techexpress".equals(uri.getScheme())) {
                     handlePaymentResult(uri);
                     return true;
                 }
@@ -71,30 +79,24 @@ public class PaymentWebViewActivity extends AppCompatActivity {
     }
 
     private void handlePaymentResult(Uri uri) {
-        String status = uri.getQueryParameter("status");
-        if ("PAID".equalsIgnoreCase(status) || "success".equalsIgnoreCase(status)) {
-            showSuccessDialog();
+        String code = uri.getQueryParameter("code");       // PayOS: "00" = success
+        String status = uri.getQueryParameter("status");   // deep link fallback: "PAID"
+        String orderCode = uri.getQueryParameter("orderCode");
+        boolean isSuccess = "00".equals(code)
+                || "PAID".equalsIgnoreCase(status)
+                || "success".equalsIgnoreCase(status);
+        navigateToResult(isSuccess, orderCode);
+    }
+
+    private void navigateToResult(boolean isSuccess, String orderCode) {
+        Intent intent;
+        if (isSuccess) {
+            intent = new Intent(this, PaymentSuccessActivity.class);
+            intent.putExtra(PaymentSuccessActivity.EXTRA_ORDER_CODE, orderCode);
         } else {
-            Toast.makeText(this, "Thanh toán thất bại hoặc bị huỷ.", Toast.LENGTH_SHORT).show();
-            finish();
+            intent = new Intent(this, PaymentFailedActivity.class);
         }
-    }
-
-    private void showSuccessDialog() {
-        android.app.Dialog dialog = new android.app.Dialog(this);
-        dialog.setContentView(R.layout.dialog_payment_success);
-        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        dialog.setCancelable(false);
-        dialog.findViewById(R.id.btnGoHome).setOnClickListener(v -> {
-            dialog.dismiss();
-            goHome();
-        });
-        dialog.show();
-    }
-
-    private void goHome() {
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
     }
@@ -107,14 +109,5 @@ public class PaymentWebViewActivity extends AppCompatActivity {
             finish();
         }
         return true;
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (binding.webView.canGoBack()) {
-            binding.webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
     }
 }

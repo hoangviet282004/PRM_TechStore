@@ -13,6 +13,8 @@ import com.example.myapp.models.response.ChatMessageResponse;
 import com.example.myapp.models.response.ChatRoomResponse;
 import com.example.myapp.models.response.LoginResponse;
 import com.example.myapp.models.response.OrderResponse;
+import com.example.myapp.models.response.OrderSummaryResponse;
+import com.example.myapp.models.response.PaymentResponse;
 import com.example.myapp.models.response.PageResponse;
 import com.example.myapp.models.response.ProductDetailResponse;
 import com.example.myapp.models.response.ProductListResponse;
@@ -80,6 +82,9 @@ public interface ApiService {
     // --- ORDERS & PAYMENTS ---
     @POST("api/orders")
     Call<ApiResponse<OrderResponse>> createOrder(@Body CreateOrderRequest request);
+
+    @GET("api/payments/summary/{orderCode}")
+    Call<ApiResponse<OrderSummaryResponse>> getOrderSummary(@Path("orderCode") String orderCode);
 
     @GET("api/payments/{orderId}")
     Call<ApiResponse<String>> getPaymentUrl(@Path("orderId") int orderId);

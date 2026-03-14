@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="32dp"
+    android:background="@color/color_background">
+
+    <ImageView
+        android:id="@+id/imgFailed"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:src="@android:drawable/ic_dialog_alert"
+        android:contentDescription="Thất bại" />
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Thanh Toán Thất Bại"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="#C62828" />
+
+    <TextView
+        android:id="@+id/tvMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:text="Giao dịch không thành công hoặc đã bị hủy.\nVui lòng thử lại."
+        android:textSize="16sp"
+        android:textColor="@color/color_text_primary" />
+
+    <Button
+        android:id="@+id/btnRetry"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
+        android:text="Thử Lại"
+        android:backgroundTint="#C62828"
+        android:textColor="@color/white" />
+
+    <Button
+        android:id="@+id/btnBackHome"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Về Trang Chủ"
+        android:backgroundTint="@color/color_primary"
+        android:textColor="@color/white" />
+
+</LinearLayout>

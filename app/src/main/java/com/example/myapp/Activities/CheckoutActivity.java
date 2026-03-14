@@ -179,22 +179,21 @@ public class CheckoutActivity extends AppCompatActivity {
 
     private void handleIntent(Intent intent) {
         Uri data = intent.getData();
-        if (data != null && "techexpress".equals(data.getScheme())) {
-            if ("PAID".equalsIgnoreCase(data.getQueryParameter("status"))) {
-                showSuccessDialog();
-            }
-        }
-    }
+        if (data == null || !"techexpress".equals(data.getScheme())) return;
 
-    private void showSuccessDialog() {
-        android.app.Dialog dialog = new android.app.Dialog(this);
-        dialog.setContentView(com.example.myapp.R.layout.dialog_payment_success);
-        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        dialog.setCancelable(false);
-        dialog.findViewById(com.example.myapp.R.id.btnGoHome).setOnClickListener(v -> {
-            dialog.dismiss();
-            goHome();
-        });
-        dialog.show();
+        String status = data.getQueryParameter("status");
+        String orderCode = data.getQueryParameter("orderCode");
+        boolean isSuccess = "PAID".equalsIgnoreCase(status) || "Processing".equalsIgnoreCase(status);
+
+        Intent resultIntent;
+        if (isSuccess) {
+            resultIntent = new Intent(this, PaymentSuccessActivity.class);
+            resultIntent.putExtra(PaymentSuccessActivity.EXTRA_ORDER_CODE, orderCode);
+        } else {
+            resultIntent = new Intent(this, PaymentFailedActivity.class);
+        }
+        resultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(resultIntent);
+        finish();
     }
 }
