@@ -3,18 +3,23 @@ package com.example.myapp.Activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
+import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import com.example.myapp.RetrofitClient;
 import com.example.myapp.SharedPrefsManager;
 import com.example.myapp.adapters.CartAdapter;
 import com.example.myapp.databinding.ActivityCartBinding;
-import com.example.myapp.models.request.ManageProductToCartRequest;
+import com.example.myapp.models.request.AdjustProductQuantityInCartRequest;
 import com.example.myapp.models.response.*;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Locale;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -24,19 +29,21 @@ public class CartActivity extends AppCompatActivity {
     private CartAdapter adapter;
     private int currentCartId = -1;
 
+    private static final NumberFormat CURRENCY = NumberFormat.getCurrencyInstance(Locale.US);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        binding = ActivityCartBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
         if (SharedPrefsManager.getAccessToken() == null) {
-            Toast.makeText(this, "Vui lòng đăng nhập để xem giỏ hàng", Toast.LENGTH_SHORT).show();
+            Snackbar.make(binding.getRoot(), "Vui lòng đăng nhập để xem giỏ hàng", Snackbar.LENGTH_SHORT).show();
             startActivity(new Intent(this, LoginActivity.class));
             finish();
             return;
         }
-
-        binding = ActivityCartBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
 
         // THIẾT LẬP TOOLBAR VÀ NÚT BACK
         setSupportActionBar(binding.toolbar);
@@ -53,7 +60,7 @@ public class CartActivity extends AppCompatActivity {
                 intent.putExtra("CART_ID", currentCartId);
                 startActivity(intent);
             } else {
-                Toast.makeText(this, "Giỏ hàng hiện đang trống!", Toast.LENGTH_SHORT).show();
+                Snackbar.make(binding.getRoot(), "Giỏ hàng hiện đang trống!", Snackbar.LENGTH_SHORT).show();
             }
         });
 
@@ -89,6 +96,10 @@ public class CartActivity extends AppCompatActivity {
 
         binding.rvCartItems.setLayoutManager(new LinearLayoutManager(this));
         binding.rvCartItems.setAdapter(adapter);
+        RecyclerView.ItemAnimator animator = binding.rvCartItems.getItemAnimator();
+        if (animator instanceof SimpleItemAnimator) {
+            ((SimpleItemAnimator) animator).setSupportsChangeAnimations(false);
+        }
     }
 
     private void fetchCart() {
@@ -102,27 +113,38 @@ public class CartActivity extends AppCompatActivity {
                     adapter.setData(data.getItems() != null ? data.getItems() : new ArrayList<>());
 
                     if (data.getTotalPrice() != null) {
-                        binding.tvCartTotal.setText(String.format("%,.0f VNĐ", data.getTotalPrice().doubleValue()));
+                        binding.tvCartTotal.setText(CURRENCY.format(data.getTotalPrice().doubleValue()));
                     } else {
-                        binding.tvCartTotal.setText("0 VNĐ");
+                        binding.tvCartTotal.setText(CURRENCY.format(0.00));
                     }
                 }
             }
             @Override
             public void onFailure(Call<ApiResponse<CartResponse>> call, Throwable t) {
-                Toast.makeText(CartActivity.this, "Lỗi kết nối server!", Toast.LENGTH_SHORT).show();
+                Snackbar.make(binding.getRoot(), "Lỗi kết nối server!", Snackbar.LENGTH_LONG)
+                        .setAction("Thử lại", v -> fetchCart())
+                        .show();
             }
         });
     }
 
-    private void updateQuantity(int productId, int qty) {
-        ManageProductToCartRequest req = new ManageProductToCartRequest(productId, qty);
+    private void updateQuantity(int cartItemId, int qty) {
+        AdjustProductQuantityInCartRequest req = new AdjustProductQuantityInCartRequest(cartItemId, qty);
         RetrofitClient.getApiService().adjustQuantity(req).enqueue(new Callback<ApiResponse<CartResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<CartResponse>> c, Response<ApiResponse<CartResponse>> r) {
-                if (r.isSuccessful()) fetchCart();
+                if (r.isSuccessful() && r.body() != null && r.body().getData() != null) {
+                    CartResponse updated = r.body().getData();
+                    binding.tvCartTotal.setText(updated.getTotalPrice() != null
+                            ? CURRENCY.format(updated.getTotalPrice().doubleValue())
+                            : CURRENCY.format(0.00));
+                } else {
+                    fetchCart(); // fallback: full refresh if response is unexpected
+                }
             }
-            @Override public void onFailure(Call<ApiResponse<CartResponse>> c, Throwable t) {}
+            @Override public void onFailure(Call<ApiResponse<CartResponse>> c, Throwable t) {
+                fetchCart(); // fallback: re-sync on network error to revert optimistic update
+            }
         });
     }
 

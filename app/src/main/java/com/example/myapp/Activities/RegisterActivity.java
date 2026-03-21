@@ -2,7 +2,7 @@ package com.example.myapp.Activities;
 
 import android.os.Bundle;
 import android.util.Patterns;
-import android.widget.Toast;
+import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.myapp.RetrofitClient;
 import com.example.myapp.databinding.ActivityRegisterBinding;
@@ -184,7 +184,7 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<SignUpResponse> call, Response<SignUpResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Toast.makeText(RegisterActivity.this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show();
+                    setResult(RESULT_OK);
                     finish();
                 } else {
                     try {
@@ -197,17 +197,17 @@ public class RegisterActivity extends AppCompatActivity {
                         } else if (message.toLowerCase().contains("email")) {
                             binding.tilRegEmail.setError(message);
                         } else {
-                            Toast.makeText(RegisterActivity.this, message, Toast.LENGTH_LONG).show();
+                            Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {
-                        Toast.makeText(RegisterActivity.this, "Lỗi không xác định", Toast.LENGTH_SHORT).show();
+                        Snackbar.make(binding.getRoot(), "Lỗi không xác định", Snackbar.LENGTH_SHORT).show();
                     }
                 }
             }
 
             @Override
             public void onFailure(Call<SignUpResponse> call, Throwable t) {
-                Toast.makeText(RegisterActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Snackbar.make(binding.getRoot(), "Lỗi kết nối: " + t.getMessage(), Snackbar.LENGTH_LONG).show();
             }
         });
     }

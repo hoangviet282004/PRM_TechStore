@@ -9,7 +9,7 @@ import android.view.View;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Toast;
+import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.myapp.R;
@@ -33,7 +33,7 @@ public class PaymentWebViewActivity extends AppCompatActivity {
 
         String url = getIntent().getStringExtra(EXTRA_URL);
         if (url == null || url.isEmpty()) {
-            Toast.makeText(this, "URL thanh toán không hợp lệ.", Toast.LENGTH_SHORT).show();
+            Snackbar.make(binding.getRoot(), "URL thanh toán không hợp lệ.", Snackbar.LENGTH_SHORT).show();
             finish();
             return;
         }

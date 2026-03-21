@@ -12,8 +12,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
-import android.widget.Toast;
+import com.google.android.material.snackbar.Snackbar;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -50,6 +52,17 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private ProductAdapter adapter;
+
+    private final ActivityResultLauncher<Intent> loginLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    String username = result.getData().getStringExtra("username");
+                    updateAuthState();
+                    Snackbar.make(binding.getRoot(),
+                            "Chào mừng " + (username != null ? username : ""),
+                            Snackbar.LENGTH_SHORT).show();
+                }
+            });
     private String currentSort = "asc";
     private String currentKeyword = null;
 
@@ -125,23 +138,23 @@ public class MainActivity extends AppCompatActivity {
             loadProductsFromBE();
         });
 
-        // Khởi tạo slider khoảng giá
-        binding.rsPrice.setValues(0f, 50_000_000f);
+        // Khởi tạo slider khoảng giá (USD, max $20,000)
+        final float PRICE_MAX = 20_000f;
+        final float PRICE_STEP = 100f;
+        binding.rsPrice.setValues(0f, PRICE_MAX);
         binding.rsPrice.setLabelFormatter(value -> {
-            long v = (long) value;
-            if (v == 0) return "Min";
-            if (v >= 50_000_000) return "Max";
-            if (v >= 1_000_000) return String.format("%.1f tr", value / 1_000_000f);
-            return String.format("%.0f K", value / 1_000f);
+            if (value == 0) return "Min";
+            if (value >= PRICE_MAX) return "Max";
+            return "$" + (int) value;
         });
 
         // Slider → text input sync
         binding.rsPrice.addOnChangeListener((slider, value, fromUser) -> {
             if (fromUser) {
-                long minVal = slider.getValues().get(0).longValue();
-                long maxVal = slider.getValues().get(1).longValue();
-                binding.etMinPrice.setText(minVal == 0 ? "" : String.valueOf(minVal));
-                binding.etMaxPrice.setText(maxVal == 50_000_000L ? "" : String.valueOf(maxVal));
+                float minVal = slider.getValues().get(0);
+                float maxVal = slider.getValues().get(1);
+                binding.etMinPrice.setText(minVal == 0f ? "" : String.valueOf((int) minVal));
+                binding.etMaxPrice.setText(maxVal == PRICE_MAX ? "" : String.valueOf((int) maxVal));
             }
         });
 
@@ -152,19 +165,34 @@ public class MainActivity extends AppCompatActivity {
                     String minStr = binding.etMinPrice.getText().toString().trim();
                     String maxStr = binding.etMaxPrice.getText().toString().trim();
                     float minF = minStr.isEmpty() ? 0f : Float.parseFloat(minStr);
-                    float maxF = maxStr.isEmpty() ? 50_000_000f : Float.parseFloat(maxStr);
-                    minF = Math.max(0f, Math.min(minF, 50_000_000f));
-                    maxF = Math.max(0f, Math.min(maxF, 50_000_000f));
+                    float maxF = maxStr.isEmpty() ? PRICE_MAX : Float.parseFloat(maxStr);
+                    minF = Math.max(0f, Math.min(minF, PRICE_MAX));
+                    maxF = Math.max(0f, Math.min(maxF, PRICE_MAX));
                     if (minF > maxF) minF = maxF;
-                    // Snap to nearest step (500,000)
-                    minF = Math.round(minF / 500_000f) * 500_000f;
-                    maxF = Math.round(maxF / 500_000f) * 500_000f;
+                    // Snap to nearest step ($100)
+                    minF = Math.round(minF / PRICE_STEP) * PRICE_STEP;
+                    maxF = Math.round(maxF / PRICE_STEP) * PRICE_STEP;
                     binding.rsPrice.setValues(minF, maxF);
                 } catch (NumberFormatException ignored) {}
             }
         };
         binding.etMinPrice.setOnFocusChangeListener(syncToSlider);
         binding.etMaxPrice.setOnFocusChangeListener(syncToSlider);
+
+        // Nút Đặt lại
+        binding.btnResetFilter.setOnClickListener(v -> {
+            binding.etSearch.setText("");
+            currentKeyword = null;
+            binding.rsPrice.setValues(0f, PRICE_MAX);
+            binding.etMinPrice.setText("");
+            binding.etMaxPrice.setText("");
+            binding.spCategories.setSelection(0);
+            selectedCategoryId = null;
+            selectedBrandId = null;
+            currentSort = "asc";
+            binding.btnSortPrice.setText("Giá ↑");
+            loadProductsFromBE();
+        });
 
         // Nút Lọc tổng hợp
         binding.btnApplyFilter.setOnClickListener(v -> {
@@ -243,7 +271,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             @Override public void onFailure(@NonNull Call<ApiResponse<PageResponse<ProductListResponse>>> call, @NonNull Throwable t) {
-                Toast.makeText(MainActivity.this, "Không thể tải sản phẩm. Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
+                Snackbar.make(binding.getRoot(), "Không thể tải sản phẩm. Vui lòng thử lại.", Snackbar.LENGTH_LONG)
+                        .setAction("Thử lại", v -> loadProductsFromBE())
+                        .show();
             }
         });
     }
@@ -313,7 +343,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void performLogout() {
         SharedPrefsManager.clearAll();
-        Toast.makeText(this, "Đã đăng xuất", Toast.LENGTH_SHORT).show();
+        Snackbar.make(binding.getRoot(), "Đã đăng xuất", Snackbar.LENGTH_SHORT).show();
         updateAuthState();
     }
 
@@ -343,7 +373,7 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
         if (id == R.id.action_map) startActivity(new Intent(this, MapActivity.class));
         else if (id == R.id.action_cart) startActivity(new Intent(this, CartActivity.class));
-        else if (id == R.id.action_login) startActivity(new Intent(this, LoginActivity.class));
+        else if (id == R.id.action_login) loginLauncher.launch(new Intent(this, LoginActivity.class));
         else if (id == R.id.action_logout) performLogout();
         return super.onOptionsItemSelected(item);
     }

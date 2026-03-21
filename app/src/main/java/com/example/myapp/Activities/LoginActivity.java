@@ -4,7 +4,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
-import android.widget.Toast;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.myapp.RetrofitClient;
 import com.example.myapp.SharedPrefsManager;
@@ -19,6 +21,13 @@ import retrofit2.Response;
 public class LoginActivity extends AppCompatActivity {
     private ActivityLoginBinding binding;
 
+    private final ActivityResultLauncher<Intent> registerLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    Snackbar.make(binding.getRoot(), "Đăng ký thành công! Vui lòng đăng nhập.", Snackbar.LENGTH_LONG).show();
+                }
+            });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,14 +41,14 @@ public class LoginActivity extends AppCompatActivity {
             String user = binding.etUsername.getText().toString().trim();
             String pass = binding.etPassword.getText().toString().trim();
             if (user.isEmpty() || pass.isEmpty()) {
-                Toast.makeText(this, "Vui lòng nhập đủ thông tin", Toast.LENGTH_SHORT).show();
+                Snackbar.make(binding.getRoot(), "Vui lòng nhập đủ thông tin", Snackbar.LENGTH_SHORT).show();
             } else {
                 performLogin(user, pass);
             }
         });
 
         binding.tvRegister.setOnClickListener(v ->
-                startActivity(new Intent(this, RegisterActivity.class)));
+                registerLauncher.launch(new Intent(this, RegisterActivity.class)));
     }
 
     private void performLogin(String user, String pass) {
@@ -59,10 +68,12 @@ public class LoginActivity extends AppCompatActivity {
                     SharedPrefsManager.saveUserRole(role);
 
                     SharedPrefsManager.saveUsername(username);
-                    Toast.makeText(LoginActivity.this, "Chào mừng " + username, Toast.LENGTH_SHORT).show();
+                    Intent result = new Intent();
+                    result.putExtra("username", username);
+                    setResult(RESULT_OK, result);
                     finish();
                 } else {
-                    Toast.makeText(LoginActivity.this, "Sai tài khoản hoặc mật khẩu", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(binding.getRoot(), "Sai tài khoản hoặc mật khẩu", Snackbar.LENGTH_SHORT).show();
                 }
             }
 

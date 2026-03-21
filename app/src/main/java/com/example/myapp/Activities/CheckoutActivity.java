@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
+import com.google.android.material.snackbar.Snackbar;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.myapp.RetrofitClient;
@@ -34,7 +34,7 @@ public class CheckoutActivity extends AppCompatActivity {
 
         cartId = getIntent().getIntExtra("CART_ID", -1);
         if (cartId == -1) {
-            Toast.makeText(this, "Lỗi: Không tìm thấy giỏ hàng.", Toast.LENGTH_SHORT).show();
+            Snackbar.make(binding.getRoot(), "Lỗi: Không tìm thấy giỏ hàng.", Snackbar.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -118,7 +118,9 @@ public class CheckoutActivity extends AppCompatActivity {
                 } else {
                     showLoading(false);
                     binding.btnPay.setEnabled(true);
-                    Toast.makeText(CheckoutActivity.this, "Lỗi tạo đơn. Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(binding.getRoot(), "Lỗi tạo đơn. Vui lòng thử lại.", Snackbar.LENGTH_LONG)
+                            .setAction("Thử lại", v -> createOrder())
+                            .show();
                 }
             }
 
@@ -126,7 +128,9 @@ public class CheckoutActivity extends AppCompatActivity {
             public void onFailure(@NonNull Call<ApiResponse<OrderResponse>> call, @NonNull Throwable t) {
                 showLoading(false);
                 binding.btnPay.setEnabled(true);
-                Toast.makeText(CheckoutActivity.this, "Lỗi kết nối. Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
+                Snackbar.make(binding.getRoot(), "Lỗi kết nối. Vui lòng thử lại.", Snackbar.LENGTH_LONG)
+                        .setAction("Thử lại", v -> createOrder())
+                        .show();
             }
         });
     }
@@ -144,10 +148,12 @@ public class CheckoutActivity extends AppCompatActivity {
                         intent.putExtra(PaymentWebViewActivity.EXTRA_URL, payUrl);
                         startActivity(intent);
                     } else {
-                        Toast.makeText(CheckoutActivity.this, "Link thanh toán không hợp lệ.", Toast.LENGTH_SHORT).show();
+                        Snackbar.make(binding.getRoot(), "Link thanh toán không hợp lệ.", Snackbar.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toast.makeText(CheckoutActivity.this, "Không thể lấy link thanh toán. Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(binding.getRoot(), "Không thể lấy link thanh toán. Vui lòng thử lại.", Snackbar.LENGTH_LONG)
+                            .setAction("Thử lại", v -> createOrder())
+                            .show();
                 }
             }
 
@@ -155,7 +161,9 @@ public class CheckoutActivity extends AppCompatActivity {
             public void onFailure(@NonNull Call<ApiResponse<String>> call, @NonNull Throwable t) {
                 showLoading(false);
                 binding.btnPay.setEnabled(true);
-                Toast.makeText(CheckoutActivity.this, "Lỗi kết nối. Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
+                Snackbar.make(binding.getRoot(), "Lỗi kết nối. Vui lòng thử lại.", Snackbar.LENGTH_LONG)
+                        .setAction("Thử lại", v -> createOrder())
+                        .show();
             }
         });
     }

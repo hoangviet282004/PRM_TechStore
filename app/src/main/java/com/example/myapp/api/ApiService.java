@@ -2,6 +2,7 @@ package com.example.myapp.api;
 
 import com.example.myapp.models.request.CreateOrderRequest;
 import com.example.myapp.models.request.LoginRequest;
+import com.example.myapp.models.request.AdjustProductQuantityInCartRequest;
 import com.example.myapp.models.request.ManageProductToCartRequest;
 import com.example.myapp.models.request.RefreshRequest;
 import com.example.myapp.models.request.SignUpRequest;
@@ -74,7 +75,7 @@ public interface ApiService {
     Call<ApiResponse<CartResponse>> getUserCart();
 
     @PATCH("api/cart")
-    Call<ApiResponse<CartResponse>> adjustQuantity(@Body ManageProductToCartRequest request);
+    Call<ApiResponse<CartResponse>> adjustQuantity(@Body AdjustProductQuantityInCartRequest request);
 
     @DELETE("api/cart/{cartItemId}")
     Call<ApiResponse<CartResponse>> removeItem(@Path("cartItemId") int cartItemId);

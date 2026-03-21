@@ -30,7 +30,7 @@ public class PaymentSuccessActivity extends AppCompatActivity {
 
     public static final String EXTRA_ORDER_CODE = "ORDER_CODE";
 
-    private static final NumberFormat CURRENCY = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
+    private static final NumberFormat CURRENCY = NumberFormat.getNumberInstance(Locale.US);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +98,7 @@ public class PaymentSuccessActivity extends AppCompatActivity {
 
             TextView tvAmount = findViewById(R.id.tvSummaryAmount);
             BigDecimal amount = summary.getPayment().getAmount();
-            tvAmount.setText(amount != null ? CURRENCY.format(amount) + " đ" : "—");
+            tvAmount.setText(amount != null ? CURRENCY.format(amount) : "-");
 
             TextView tvPayStatus = findViewById(R.id.tvSummaryPaymentStatus);
             tvPayStatus.setText(summary.getPayment().getPaymentStatus());

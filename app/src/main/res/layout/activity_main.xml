@@ -87,7 +87,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Khoảng giá (VNĐ):"
+                        android:text="Khoảng giá (USD):"
                         android:textColor="@color/color_text_secondary"
                         android:textSize="12sp"
                         android:layout_marginBottom="4dp" />
@@ -99,8 +99,8 @@
                         android:layout_marginStart="4dp"
                         android:layout_marginEnd="4dp"
                         android:valueFrom="0"
-                        android:valueTo="50000000"
-                        android:stepSize="500000"
+                        android:valueTo="20000"
+                        android:stepSize="100"
                         app:thumbColor="@color/color_primary"
                         app:thumbRadius="10dp"
                         app:thumbStrokeWidth="2dp"
@@ -126,7 +126,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:layout_marginEnd="4dp"
-                            android:hint="Giá tối thiểu">
+                            android:hint="Min ($)">
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/etMinPrice"
                                 android:layout_width="match_parent"
@@ -141,7 +141,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:layout_marginStart="4dp"
-                            android:hint="Giá tối đa">
+                            android:hint="Max ($)">
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/etMaxPrice"
                                 android:layout_width="match_parent"
@@ -167,10 +167,19 @@
                         <View android:layout_width="8dp" android:layout_height="0dp"/>
 
                         <Button
+                            android:id="@+id/btnResetFilter"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="48dp"
+                            android:layout_marginEnd="6dp"
+                            android:text="Đặt lại"
+                            app:cornerRadius="8dp" />
+
+                        <Button
                             android:id="@+id/btnApplyFilter"
                             android:layout_width="wrap_content"
                             android:layout_height="48dp"
-                            android:text="Lọc Ngay"
+                            android:text="Lọc"
                             app:cornerRadius="8dp" />
                     </LinearLayout>
                 </LinearLayout>

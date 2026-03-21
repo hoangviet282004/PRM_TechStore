@@ -25,11 +25,6 @@ public class PaymentFailedActivity extends AppCompatActivity {
         findViewById(R.id.btnBackHome).setOnClickListener(v -> goHome());
     }
 
-    @Override
-    public void onBackPressed() {
-        goHome();
-    }
-
     private void goHome() {
         Intent intent = new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

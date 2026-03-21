@@ -12,11 +12,15 @@ import com.example.myapp.R;
 import com.example.myapp.databinding.ItemProductBinding;
 import com.example.myapp.models.response.ProductListResponse;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
     private List<ProductListResponse> list = new ArrayList<>();
+
+    private static final NumberFormat CURRENCY = NumberFormat.getCurrencyInstance(Locale.US);
 
     public void setData(List<ProductListResponse> newList) {
         this.list = newList;
@@ -34,7 +38,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         ProductListResponse p = list.get(position);
         holder.b.tvName.setText(p.getProductName());
         holder.b.tvDescription.setText(p.getBriefDescription());
-        holder.b.tvPrice.setText(String.format("%,.0f VNĐ", p.getPrice().doubleValue()));
+        holder.b.tvPrice.setText(CURRENCY.format(p.getPrice().doubleValue()));
 
         // --- THÊM ĐOẠN NÀY ĐỂ MỞ CHI TIẾT ---
         holder.itemView.setOnClickListener(v -> {

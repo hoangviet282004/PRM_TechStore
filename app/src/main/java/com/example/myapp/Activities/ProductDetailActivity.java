@@ -3,7 +3,7 @@ package com.example.myapp.Activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
+import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myapp.RetrofitClient;
@@ -69,7 +69,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         binding.btnAddToCart.setOnClickListener(v -> {
             if (SharedPrefsManager.getAccessToken() == null) {
-                Toast.makeText(this, "Vui lòng đăng nhập để thêm vào giỏ hàng", Toast.LENGTH_SHORT).show();
+                Snackbar.make(binding.getRoot(), "Vui lòng đăng nhập để thêm vào giỏ hàng", Snackbar.LENGTH_SHORT).show();
                 startActivity(new Intent(this, LoginActivity.class));
                 return;
             }
@@ -84,7 +84,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                     binding.btnAddToCart.setEnabled(true);
 
                     if (response.isSuccessful()) {
-                        Toast.makeText(ProductDetailActivity.this, "Đã thêm vào giỏ!", Toast.LENGTH_SHORT).show();
+                        Snackbar.make(binding.getRoot(), "Đã thêm vào giỏ!", Snackbar.LENGTH_SHORT).show();
                         startActivity(new Intent(ProductDetailActivity.this, CartActivity.class));
                     }
                 }
@@ -93,7 +93,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                 public void onFailure(Call<ApiResponse<CartResponse>> call, Throwable t) {
                     binding.progressBar.setVisibility(View.GONE);
                     binding.btnAddToCart.setEnabled(true);
-                    Toast.makeText(ProductDetailActivity.this, "Lỗi kết nối!", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(binding.getRoot(), "Lỗi kết nối!", Snackbar.LENGTH_SHORT).show();
                 }
             });
         });

@@ -5,16 +5,19 @@ import java.math.BigDecimal;
 public class CartItemResponse {
     private Integer id;
     private Integer cartId;
+    private Integer productId;
     private String productName;
-    private String productImage; // KHỚP VỚI BE
+    private String productImage;
     private int quantity;
-    private BigDecimal price;    // KHỚP VỚI BE
+    private BigDecimal price;
 
     // Getters
-    public String getProductImage() { return productImage; }
-    public BigDecimal getPrice() { return price; }
-    public String getProductName() { return productName; }
-    public int getQuantity() { return quantity; }
     public Integer getId() { return id; }
-    public Integer getProductId() { return id; } // Giả định ID item là ID sản phẩm
+    public Integer getCartId() { return cartId; }
+    public Integer getProductId() { return productId; }
+    public String getProductName() { return productName; }
+    public String getProductImage() { return productImage; }
+    public int getQuantity() { return quantity; }
+    public void setQuantity(int quantity) { this.quantity = quantity; }
+    public BigDecimal getPrice() { return price; }
 }

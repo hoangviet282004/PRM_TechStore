@@ -21,7 +21,6 @@ import java.util.Locale;
 public class OrderSummaryItemAdapter extends RecyclerView.Adapter<OrderSummaryItemAdapter.ViewHolder> {
 
     private final List<CartItemResponse> items;
-    private static final NumberFormat CURRENCY = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
 
     public OrderSummaryItemAdapter(List<CartItemResponse> items) {
         this.items = items;
@@ -43,7 +42,8 @@ public class OrderSummaryItemAdapter extends RecyclerView.Adapter<OrderSummaryIt
 
         if (item.getPrice() != null) {
             BigDecimal total = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
-            holder.tvPrice.setText(CURRENCY.format(total) + " đ");
+            var formatter = NumberFormat.getCurrencyInstance(Locale.US);
+            holder.tvPrice.setText(formatter.format(total.doubleValue()));
         }
 
         if (item.getProductImage() != null && !item.getProductImage().isEmpty()) {
