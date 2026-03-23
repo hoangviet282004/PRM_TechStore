@@ -36,6 +36,8 @@ import com.example.myapp.databinding.ActivityMainBinding;
 import com.example.myapp.models.response.ApiResponse;
 import com.example.myapp.models.response.BrandResponse; // Đảm bảo đã tạo model này
 import com.example.myapp.models.response.CategoryResponse;
+import com.example.myapp.models.response.CartItemResponse;
+import com.example.myapp.models.response.CartResponse;
 import com.example.myapp.models.response.ChatRoomResponse;
 import com.example.myapp.models.response.PageResponse;
 import com.example.myapp.models.response.ProductListResponse;
@@ -349,9 +351,17 @@ public class MainActivity extends AppCompatActivity {
         updateAuthState();
     }
 
+    private MenuItem cartMenuItem;
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
+        cartMenuItem = menu.findItem(R.id.action_cart);
+        View actionView = cartMenuItem.getActionView();
+        if (actionView != null) {
+            actionView.findViewById(R.id.ibCart).setOnClickListener(v ->
+                    startActivity(new Intent(this, CartActivity.class)));
+        }
         return true;
     }
 
@@ -366,15 +376,42 @@ public class MainActivity extends AppCompatActivity {
             String username = SharedPrefsManager.getUsername();
             menu.findItem(R.id.action_username).setTitle(
                     (username != null && !username.isEmpty()) ? username : "Tài khoản");
+            updateCartBadge();
         }
         return super.onPrepareOptionsMenu(menu);
+    }
+
+    public void updateCartBadge() {
+        if (SharedPrefsManager.getAccessToken() == null || cartMenuItem == null) return;
+        RetrofitClient.getApiService().getUserCart().enqueue(new Callback<ApiResponse<CartResponse>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<CartResponse>> call,
+                                   @NonNull Response<ApiResponse<CartResponse>> response) {
+                if (!response.isSuccessful() || response.body() == null || response.body().getData() == null) return;
+                int total = 0;
+                List<CartItemResponse> items = response.body().getData().getItems();
+                if (items != null) for (CartItemResponse i : items) total += i.getQuantity();
+                final int count = total;
+                runOnUiThread(() -> {
+                    View actionView = cartMenuItem.getActionView();
+                    if (actionView == null) return;
+                    android.widget.TextView badge = actionView.findViewById(R.id.tvCartBadge);
+                    if (count > 0) {
+                        badge.setVisibility(View.VISIBLE);
+                        badge.setText(count > 99 ? "99+" : String.valueOf(count));
+                    } else {
+                        badge.setVisibility(View.GONE);
+                    }
+                });
+            }
+            @Override public void onFailure(@NonNull Call<ApiResponse<com.example.myapp.models.response.CartResponse>> call, @NonNull Throwable t) {}
+        });
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_map) startActivity(new Intent(this, MapActivity.class));
-        else if (id == R.id.action_cart) startActivity(new Intent(this, CartActivity.class));
         else if (id == R.id.action_login) loginLauncher.launch(new Intent(this, LoginActivity.class));
         else if (id == R.id.action_logout) performLogout();
         return super.onOptionsItemSelected(item);
@@ -382,5 +419,5 @@ public class MainActivity extends AppCompatActivity {
 
     @Override protected void onStart() { super.onStart(); updateAuthState(); badgeHandler.post(badgeRunnable); }
     @Override protected void onStop() { super.onStop(); badgeHandler.removeCallbacks(badgeRunnable); }
-    @Override protected void onResume() { super.onResume(); }
+    @Override protected void onResume() { super.onResume(); updateCartBadge(); }
 }
