@@ -36,7 +36,7 @@ public class CartBadgeWorker extends Worker {
                 List<CartItemResponse> items = response.body().getData().getItems();
                 int count = 0;
                 if (items != null) {
-                    for (com.example.myapp.models.response.CartItemResponse item : items) {
+                    for (CartItemResponse item : items) {
                         count += item.getQuantity();
                     }
                 }
