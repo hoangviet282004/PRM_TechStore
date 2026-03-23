@@ -7,6 +7,7 @@ import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myapp.RetrofitClient;
+import com.example.myapp.Utils.NotificationHelper;
 import com.example.myapp.SharedPrefsManager;
 import com.example.myapp.adapters.ImageSliderAdapter;
 import com.example.myapp.databinding.ActivityProductDetailBinding;
@@ -85,6 +86,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
                     if (response.isSuccessful()) {
                         Snackbar.make(binding.getRoot(), "Đã thêm vào giỏ!", Snackbar.LENGTH_SHORT).show();
+                        NotificationHelper.scheduleCartNotification(ProductDetailActivity.this);
                         startActivity(new Intent(ProductDetailActivity.this, CartActivity.class));
                     }
                 }

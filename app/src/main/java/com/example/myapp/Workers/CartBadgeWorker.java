@@ -5,9 +5,11 @@ import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 import com.example.myapp.RetrofitClient;
+import com.example.myapp.SharedPrefsManager;
 import com.example.myapp.Utils.NotificationHelper;
 import com.example.myapp.models.response.ApiResponse;
 import com.example.myapp.models.response.CartResponse;
+import java.util.List;
 import retrofit2.Response;
 
 public class CartBadgeWorker extends Worker {
@@ -18,19 +20,25 @@ public class CartBadgeWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        try {
-            // Gọi API lấy giỏ hàng từ Server
-            Response<ApiResponse<CartResponse>> response = RetrofitClient.getApiService().getUserCart().execute();
+        // Skip if not logged in
+        if (SharedPrefsManager.getAccessToken() == null) {
+            NotificationHelper.clearCartNotification(getApplicationContext());
+            return Result.success();
+        }
 
-            if (response.isSuccessful() && response.body() != null) {
-                int count = response.body().getData().getItems().size();
+        try {
+            Response<ApiResponse<CartResponse>> response =
+                    RetrofitClient.getApiService().getUserCart().execute();
+
+            if (response.isSuccessful() && response.body() != null
+                    && response.body().getData() != null) {
+                List<?> items = response.body().getData().getItems();
+                int count = (items != null) ? items.size() : 0;
 
                 if (count > 0) {
-                    // Nếu có hàng thì hiện/cập nhật con số trên dot
                     NotificationHelper.showCartBadgeNotification(getApplicationContext(), count);
                 } else {
-                    // NẾU GIỎ HÀNG TRỐNG: Gọi lệnh xóa thông báo và dot
-                    NotificationHelper.clearNotification(getApplicationContext());
+                    NotificationHelper.clearCartNotification(getApplicationContext());
                 }
             }
             return Result.success();

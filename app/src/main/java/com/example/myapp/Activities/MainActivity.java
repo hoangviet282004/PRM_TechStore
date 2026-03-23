@@ -29,6 +29,7 @@ import com.google.android.material.slider.RangeSlider;
 import com.example.myapp.R;
 import com.example.myapp.RetrofitClient;
 import com.example.myapp.SharedPrefsManager;
+import com.example.myapp.Utils.NotificationHelper;
 import com.example.myapp.Workers.CartBadgeWorker;
 import com.example.myapp.adapters.ProductAdapter;
 import com.example.myapp.databinding.ActivityMainBinding;
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
                     Snackbar.make(binding.getRoot(),
                             "Chào mừng " + (username != null ? username : ""),
                             Snackbar.LENGTH_SHORT).show();
+                    NotificationHelper.scheduleCartNotification(MainActivity.this);
                 }
             });
     private String currentSort = "asc";

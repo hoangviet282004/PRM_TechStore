@@ -7,9 +7,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
-import com.example.myapp.Activities.ChatActivity; // Thêm import này
+import com.example.myapp.Activities.ChatActivity;
 import com.example.myapp.R;
+import com.example.myapp.Workers.CartBadgeWorker;
+
+import java.util.concurrent.TimeUnit;
 
 public class NotificationHelper {
     // Giữ nguyên ID cũ của ông
@@ -45,7 +51,7 @@ public class NotificationHelper {
                 .setContentIntent(pendingIntent)
                 .setNumber(itemCount)
                 .setAutoCancel(true);
-
+        android.util.Log.d("NOTIF", "Badge count set to: " + itemCount);
         manager.notify(NOTI_ID, builder.build());
     }
 
@@ -76,12 +82,31 @@ public class NotificationHelper {
         manager.notify(CHAT_NOTI_ID, builder.build());
     }
 
-    // --- GIỮ NGUYÊN HÀM XÓA CỦA ÔNG ---
+    // Schedule a debounced cart notification: waits 5s before firing.
+    // If called again within those 5s, the timer resets (REPLACE policy).
+    public static void scheduleCartNotification(Context context) {
+        OneTimeWorkRequest work = new OneTimeWorkRequest.Builder(CartBadgeWorker.class)
+                .setInitialDelay(5, TimeUnit.SECONDS)
+                .build();
+        WorkManager.getInstance(context).enqueueUniqueWork(
+                "CartNotificationDebounce",
+                ExistingWorkPolicy.REPLACE,
+                work
+        );
+    }
+
+    // Clears only the cart badge notification
+    public static void clearCartNotification(Context context) {
+        NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) manager.cancel(NOTI_ID);
+    }
+
+    // Clears all notifications (cart + chat)
     public static void clearNotification(Context context) {
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager != null) {
-            manager.cancel(NOTI_ID); // Xóa cart
-            manager.cancel(CHAT_NOTI_ID); // Xóa chat
+            manager.cancel(NOTI_ID);
+            manager.cancel(CHAT_NOTI_ID);
         }
     }
 }
