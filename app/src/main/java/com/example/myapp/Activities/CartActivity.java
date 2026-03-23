@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import com.example.myapp.RetrofitClient;
+import com.example.myapp.Utils.NotificationHelper;
 import com.example.myapp.SharedPrefsManager;
 import com.example.myapp.adapters.CartAdapter;
 import com.example.myapp.databinding.ActivityCartBinding;
@@ -138,6 +139,7 @@ public class CartActivity extends AppCompatActivity {
                     binding.tvCartTotal.setText(updated.getTotalPrice() != null
                             ? CURRENCY.format(updated.getTotalPrice().doubleValue())
                             : CURRENCY.format(0.00));
+                    NotificationHelper.scheduleCartNotification(CartActivity.this);
                 } else {
                     fetchCart(); // fallback: full refresh if response is unexpected
                 }

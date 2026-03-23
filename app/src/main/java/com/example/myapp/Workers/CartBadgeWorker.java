@@ -8,6 +8,7 @@ import com.example.myapp.RetrofitClient;
 import com.example.myapp.SharedPrefsManager;
 import com.example.myapp.Utils.NotificationHelper;
 import com.example.myapp.models.response.ApiResponse;
+import com.example.myapp.models.response.CartItemResponse;
 import com.example.myapp.models.response.CartResponse;
 import java.util.List;
 import retrofit2.Response;
@@ -32,8 +33,13 @@ public class CartBadgeWorker extends Worker {
 
             if (response.isSuccessful() && response.body() != null
                     && response.body().getData() != null) {
-                List<?> items = response.body().getData().getItems();
-                int count = (items != null) ? items.size() : 0;
+                List<CartItemResponse> items = response.body().getData().getItems();
+                int count = 0;
+                if (items != null) {
+                    for (com.example.myapp.models.response.CartItemResponse item : items) {
+                        count += item.getQuantity();
+                    }
+                }
 
                 if (count > 0) {
                     NotificationHelper.showCartBadgeNotification(getApplicationContext(), count);
