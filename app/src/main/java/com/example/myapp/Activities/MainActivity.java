@@ -12,6 +12,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
+
+import com.example.myapp.Services.TechExpressMessagingService;
 import com.google.android.material.snackbar.Snackbar;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -346,6 +348,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void performLogout() {
+        // Capture access token BEFORE clearing — needed for the authenticated DELETE call
+        String accessToken = SharedPrefsManager.getAccessToken();
+        com.google.firebase.messaging.FirebaseMessaging.getInstance().getToken()
+                .addOnSuccessListener(fcmToken -> {
+                    if (fcmToken != null && accessToken != null) {
+                        RetrofitClient.getApiService()
+                                .removeDeviceTokenWithAuth(
+                                        "Bearer " + accessToken,
+                                        fcmToken)
+                                .enqueue(new retrofit2.Callback<ApiResponse<Void>>() {
+                                    @Override public void onResponse(retrofit2.Call call, retrofit2.Response response) {}
+                                    @Override public void onFailure(retrofit2.Call call, Throwable t) {}
+                                });
+                    }
+                });
         SharedPrefsManager.clearAll();
         Snackbar.make(binding.getRoot(), "Đã đăng xuất", Snackbar.LENGTH_SHORT).show();
         updateAuthState();

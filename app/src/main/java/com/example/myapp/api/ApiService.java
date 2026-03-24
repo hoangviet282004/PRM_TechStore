@@ -1,6 +1,7 @@
 package com.example.myapp.api;
 
 import com.example.myapp.models.request.CreateOrderRequest;
+import com.example.myapp.models.request.DeviceTokenRequest;
 import com.example.myapp.models.request.LoginRequest;
 import com.example.myapp.models.request.AdjustProductQuantityInCartRequest;
 import com.example.myapp.models.request.ManageProductToCartRequest;
@@ -31,6 +32,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.HTTP;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
@@ -133,4 +135,17 @@ public interface ApiService {
 
     @GET("api/categories")
     Call<ApiResponse<List<CategoryResponse>>> getAllCategories();
+
+    // --- DEVICE TOKEN (FCM) ---
+    @POST("api/device-token")
+    Call<ApiResponse<Void>> registerDeviceToken(@Body DeviceTokenRequest request);
+
+    @DELETE("api/device-token/{token}")
+    Call<ApiResponse<Void>> removeDeviceToken(@Path("token") String token);
+
+    // Used during logout — passes token explicitly since SharedPrefs is cleared before this call
+    @DELETE("api/device-token/{token}")
+    Call<ApiResponse<Void>> removeDeviceTokenWithAuth(
+            @retrofit2.http.Header("Authorization") String authorization,
+            @Path("token") String token);
 }

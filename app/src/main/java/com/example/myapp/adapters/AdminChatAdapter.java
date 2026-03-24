@@ -35,9 +35,15 @@ public class AdminChatAdapter extends RecyclerView.Adapter<AdminChatAdapter.View
         ChatRoomResponse room = rooms.get(position);
         holder.txtName.setText(room.getClientName()); // Hiển thị tên khách hàng
 
-        // Hiển thị tin nhắn cuối hoặc số tin chưa đọc
-        String subText = (room.getUnreadCount() > 0) ? "Có " + room.getUnreadCount() + " tin nhắn mới" : "Không có tin nhắn mới";
-        holder.txtLastMsg.setText(subText);
+        // Show last message preview + unread badge
+        String lastMsg = room.getLastMessage() != null ? room.getLastMessage() : "Chưa có tin nhắn";
+        if (room.getUnreadCount() > 0) {
+            lastMsg = "(" + room.getUnreadCount() + " mới) " + lastMsg;
+            holder.txtName.setTypeface(null, android.graphics.Typeface.BOLD);
+        } else {
+            holder.txtName.setTypeface(null, android.graphics.Typeface.NORMAL);
+        }
+        holder.txtLastMsg.setText(lastMsg);
 
         holder.itemView.setOnClickListener(v -> listener.onRoomClick(room));
     }

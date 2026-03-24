@@ -79,6 +79,14 @@
             android:exported="false"
             android:label="Thanh toán" />
 
+        <service
+            android:name=".Services.TechExpressMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <activity
             android:name=".Activities.CheckoutActivity"
             android:exported="true"

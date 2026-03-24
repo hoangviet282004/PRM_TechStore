@@ -38,7 +38,11 @@ public class AdminChatListActivity extends AppCompatActivity {
 
         rvRooms.setLayoutManager(new LinearLayoutManager(this));
         rvRooms.setAdapter(adapter);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
         loadRooms();
     }
 

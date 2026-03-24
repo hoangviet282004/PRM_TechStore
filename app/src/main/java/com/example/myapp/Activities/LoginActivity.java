@@ -6,6 +6,8 @@ import android.util.Base64;
 import android.util.Log;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+
+import com.example.myapp.Services.TechExpressMessagingService;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.myapp.RetrofitClient;
@@ -13,6 +15,8 @@ import com.example.myapp.SharedPrefsManager;
 import com.example.myapp.databinding.ActivityLoginBinding;
 import com.example.myapp.models.request.LoginRequest;
 import com.example.myapp.models.response.LoginResponse;
+import com.google.firebase.messaging.FirebaseMessaging;
+
 import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -68,6 +72,12 @@ public class LoginActivity extends AppCompatActivity {
                     SharedPrefsManager.saveUserRole(role);
 
                     SharedPrefsManager.saveUsername(username);
+                    // Register FCM token with backend
+                    FirebaseMessaging.getInstance().getToken()
+                            .addOnSuccessListener(token -> {
+                                if (token != null)
+                                    TechExpressMessagingService.registerToken(token);
+                            });
                     Intent result = new Intent();
                     result.putExtra("username", username);
                     setResult(RESULT_OK, result);

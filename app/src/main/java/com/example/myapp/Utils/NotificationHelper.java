@@ -57,6 +57,10 @@ public class NotificationHelper {
 
     // --- THÊM HÀM MỚI THEO YÊU CẦU ---
     public static void showChatNotification(Context context, String title, String message) {
+        showChatNotification(context, title, message, -1, null);
+    }
+
+    public static void showChatNotification(Context context, String title, String message, int roomId, String clientName) {
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -66,9 +70,14 @@ public class NotificationHelper {
         }
 
         // Khi bấm vào thông báo thì mở màn hình Chat
+        // If roomId is provided (admin flow), pass it so the correct room opens
         Intent intent = new Intent(context, ChatActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent,
+        if (roomId != -1) {
+            intent.putExtra("ROOM_ID", roomId);
+            if (clientName != null) intent.putExtra("CLIENT_NAME", clientName);
+        }
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, roomId != -1 ? roomId : 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHAT_CHANNEL_ID)

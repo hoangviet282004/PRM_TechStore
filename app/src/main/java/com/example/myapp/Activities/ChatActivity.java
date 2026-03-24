@@ -77,8 +77,7 @@ public class ChatActivity extends AppCompatActivity {
                 getSupportActionBar().setTitle("Hỗ trợ: " + clientName);
                 getSupportActionBar().setBackgroundDrawable(new ColorDrawable(0xFF1976D2));
             }
-            subscribeToWebSocket(roomId);
-            loadChatHistory(roomId);
+            loadChatHistory(roomId); // subscribeToWebSocket called inside after history loads
             markAsRead(roomId);
         } else {
             if (getSupportActionBar() != null) {
@@ -99,27 +98,40 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void subscribeToWebSocket(int roomId) {
-        // Lưu kết quả vào Disposable để hết báo vàng
-        Disposable disposable = mStompClient.topic("/topic/room." + roomId)
+        // Monitor connection lifecycle for error feedback
+        Disposable lifecycleDisposable = mStompClient.lifecycle()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(event -> {
+                    switch (event.getType()) {
+                        case ERROR:
+                            Log.e("CHAT", "WebSocket error: " + event.getException());
+                            break;
+                        case CLOSED:
+                            Log.w("CHAT", "WebSocket closed");
+                            break;
+                        default:
+                            break;
+                    }
+                }, throwable -> Log.e("CHAT", "Lifecycle error: " + throwable.getMessage()));
+        compositeDisposable.add(lifecycleDisposable);
+
+        Disposable topicDisposable = mStompClient.topic("/topic/room." + roomId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(topicMessage -> {
                     ChatMessageResponse msg = gson.fromJson(topicMessage.getPayload(), ChatMessageResponse.class);
-                    runOnUiThread(() -> {
-                        mMessages.add(msg);
-                        chatAdapter.notifyItemInserted(mMessages.size() - 1);
-                        rvChat.scrollToPosition(mMessages.size() - 1);
-//
-                        // CHỈ ADMIN MỚI NHẬN THÔNG BÁO BANNER (ĐÃ TẮT CHO KHÁCH)
-                        String myRole = SharedPrefsManager.getUserRole();
-                        String myUser = SharedPrefsManager.getUsername();
-                        if (!msg.getSenderUsername().equals(myUser) && "Admin".equalsIgnoreCase(myRole)) {
-                            NotificationHelper.showChatNotification(this, "Tin nhắn từ khách", msg.getMessage());
-                        }
-                    });
+                    mMessages.add(msg);
+                    chatAdapter.notifyItemInserted(mMessages.size() - 1);
+                    rvChat.scrollToPosition(mMessages.size() - 1);
+                    // Only notify admin of incoming messages from others
+                    String myUser = SharedPrefsManager.getUsername();
+                    String myRole = SharedPrefsManager.getUserRole();
+                    if (!msg.getSenderUsername().equals(myUser) && "Admin".equalsIgnoreCase(myRole)) {
+                        NotificationHelper.showChatNotification(this, "Tin nhắn từ khách", msg.getMessage());
+                    }
                 }, throwable -> Log.e("CHAT", "Lỗi Subscribe: " + throwable.getMessage()));
-
-        compositeDisposable.add(disposable);
+        compositeDisposable.add(topicDisposable);
     }
 
     private void loadChatHistory(int roomId) {
@@ -134,8 +146,12 @@ public class ChatActivity extends AppCompatActivity {
                     chatAdapter.notifyDataSetChanged();
                     if (!mMessages.isEmpty()) rvChat.scrollToPosition(mMessages.size() - 1);
                 }
+                // Subscribe after history loaded to avoid race condition
+                subscribeToWebSocket(roomId);
             }
-            @Override public void onFailure(Call<ApiResponse<PageResponse<ChatMessageResponse>>> call, Throwable t) {}
+            @Override public void onFailure(Call<ApiResponse<PageResponse<ChatMessageResponse>>> call, Throwable t) {
+                subscribeToWebSocket(roomId); // still connect even if history fails
+            }
         });
     }
 
@@ -151,18 +167,26 @@ public class ChatActivity extends AppCompatActivity {
             @Override public void onResponse(Call<ApiResponse<ChatRoomResponse>> call, Response<ApiResponse<ChatRoomResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     roomId = response.body().getData().getRoomId();
-                    subscribeToWebSocket(roomId);
-                    loadChatHistory(roomId);
+                    loadChatHistory(roomId); // subscribeToWebSocket called inside after history loads
+                    markAsRead(roomId);
                 }
             }
-            @Override public void onFailure(Call<ApiResponse<ChatRoomResponse>> call, Throwable t) {}
+            @Override public void onFailure(Call<ApiResponse<ChatRoomResponse>> call, Throwable t) {
+                Log.e("CHAT", "Không thể lấy phòng chat: " + t.getMessage());
+            }
         });
     }
 
     private void sendMessage(String text) {
         JSONObject json = new JSONObject();
         try { json.put("roomId", roomId); json.put("message", text); } catch (JSONException e) {}
-        mStompClient.send("/app/chat.send", json.toString()).subscribe();
+        Disposable disposable = mStompClient.send("/app/chat.send", json.toString())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        () -> Log.d("CHAT", "Message sent"),
+                        throwable -> Log.e("CHAT", "Send error: " + throwable.getMessage())
+                );
+        compositeDisposable.add(disposable);
     }
 
     private void markAsRead(int roomId) {
