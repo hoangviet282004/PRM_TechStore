@@ -7,6 +7,8 @@ public class OrderResponse {
     private String billingAddress;
     private String orderStatus;
     private String orderDate; // BE trả về Instant
+    private String billingFullName;
+    private String billingPhone;
 
     public Integer getId() { return id; }
     public Integer getCartId() { return cartId; }
@@ -14,4 +16,6 @@ public class OrderResponse {
     public String getBillingAddress() { return billingAddress; }
     public String getOrderStatus() { return orderStatus; }
     public String getOrderDate() { return orderDate; }
+    public String getBillingFullName() { return billingFullName; }
+    public String getBillingPhone() { return billingPhone; }
 }

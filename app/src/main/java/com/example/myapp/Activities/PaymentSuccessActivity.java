@@ -89,6 +89,12 @@ public class PaymentSuccessActivity extends AppCompatActivity {
 
             TextView tvAddress = findViewById(R.id.tvSummaryAddress);
             tvAddress.setText(summary.getOrder().getBillingAddress());
+
+            TextView tvName = findViewById(R.id.tvSummaryBillingName);
+            tvName.setText(summary.getOrder().getBillingFullName());
+
+            TextView tvPhone = findViewById(R.id.tvSummaryBillingPhone);
+            tvPhone.setText(summary.getOrder().getBillingPhone());
         }
 
         // Payment details

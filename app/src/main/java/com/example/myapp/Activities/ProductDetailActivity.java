@@ -17,8 +17,10 @@ import com.example.myapp.models.response.CartResponse;
 import com.example.myapp.models.response.ProductDetailResponse;
 import androidx.viewpager2.widget.ViewPager2;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -30,6 +32,8 @@ public class ProductDetailActivity extends AppCompatActivity {
     private int quantity = 1;
     private int productId;
     private ImageSliderAdapter imageAdapter;
+
+    private static final NumberFormat CURRENCY = NumberFormat.getCurrencyInstance(Locale.US);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,7 +120,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
     private void updateUI(ProductDetailResponse detail) {
         binding.tvDetailName.setText(detail.getProductName());
-        binding.tvDetailPrice.setText(String.format("%,.0f VNĐ", detail.getPrice().doubleValue()));
+        binding.tvDetailPrice.setText(CURRENCY.format(detail.getPrice().doubleValue()));
         binding.tvFullDescription.setText(detail.getFullDescription());
 
         List<String> images = new ArrayList<>();
